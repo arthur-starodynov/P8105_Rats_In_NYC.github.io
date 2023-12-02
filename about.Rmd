@@ -6,4 +6,4 @@ output:
     toc_float: true
 ---
 
-#Project inspiriation: 
+ Project inspiriation: 
