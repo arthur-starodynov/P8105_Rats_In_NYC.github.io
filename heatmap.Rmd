@@ -1,0 +1,77 @@
+---
+title: ""
+output: html_document
+---
+
+
+```{r split = FALSE, fig.align = 'default', warning = FALSE, out.width="100%", include = FALSE, message= FALSE}
+library(tidyverse)
+library(lubridate)
+library(readr) 
+library("ggplot2") 
+library("dplyr")
+library(xts)
+library("lubridate")
+library("RColorBrewer")
+library("ggthemes")
+library("gridExtra")
+library("leaflet")
+library("highcharter")
+library(scales)
+library(leaflet.extras)
+
+rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
+  janitor::clean_names() %>% 
+  mutate(created_date = mdy_hms(created_date)) %>%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+
+## Overall Sightings Map and Heat Map
+
+top = 40.917577 # north lat
+left = -74.259090 # west long
+right = -73.700272 # east long
+bottom =  40.477399 # south lat
+
+
+nyc = rats_raw %>%
+  filter(latitude >= bottom) %>%
+  filter ( latitude <= top) %>%
+  filter( longitude >= left ) %>%
+  filter(longitude <= right)
+
+center_lon = median(nyc$longitude,na.rm = TRUE)
+center_lat = median(nyc$latitude,na.rm = TRUE)
+
+count = nyc %>%
+  group_by(location) %>%
+  count()
+
+count 
+
+nyc = merge(nyc, count, by = "location")
+
+factpal = colorFactor("blue", nyc$n)
+
+
+```
+
+```{r,fig.align = 'default', warning = FALSE, out.width="100%", echo = FALSE}
+
+nyc %>%
+leaflet() %>% 
+  addProviderTiles("Esri.NatGeoWorldMap") %>%
+  addCircles(lng = ~longitude, lat = ~latitude)  %>%
+  setView(lng=center_lon, lat=center_lat,zoom = 10) 
+
+nyc %>%
+  leaflet() %>%
+  addProviderTiles("Esri.NatGeoWorldMap") %>%
+  addHeatmap(lng = ~longitude, lat = ~latitude, intensity = ~(nyc$n), blur = 20, max = 0.05, radius = 15) %>%
+  setView(lng=center_lon, lat=center_lat,zoom = 10)
+
+```
+
