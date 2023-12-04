@@ -9,9 +9,7 @@ output:
       collapsed: true
 ---
 
-## Data Visualizations
-
-We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps. First we visualize 
+We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps. First, we visualize rat sightings by different measures of time (year, month, and day of the week). Then, we visualize rat sightings by the different types of locations they are found at.
 
 ```{r, warning = F, message = F}
 library(tidyverse)
@@ -21,6 +19,15 @@ library(xts)
 library("RColorBrewer")
 library("ggthemes")
 library("gridExtra")
+
+rats_raw <- read_csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
+  janitor::clean_names() %>% 
+  mutate(created_date = mdy_hms(created_date)) %>%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
 ```
 
 

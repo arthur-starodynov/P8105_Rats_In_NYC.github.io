@@ -2,10 +2,10 @@
 title: "Rat Sightings in NYC"
 output: 
   html_document:
-    toc: true
-    toc_float: true
     theme: cerulean
 ---
 
 
 ![](images/original.jpg.webp)
+
+Authors: Yuki Low, Arthur Starodynov, Ekaterina Hofrenning, Lauren Lazaro
