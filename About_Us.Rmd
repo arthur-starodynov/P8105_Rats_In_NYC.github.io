@@ -1,6 +1,9 @@
 ---
 title: <center> Meet Our Team!
-output: html_document
+output: 
+  html_document:
+    theme: journal
+
 ---
 
 ```{r include=FALSE}

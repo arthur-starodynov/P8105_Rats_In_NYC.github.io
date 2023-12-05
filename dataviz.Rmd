@@ -2,7 +2,7 @@
 title: "Data Visualizations"
 output: 
   html_document:
-    theme: cerulean
+    theme: journal
     code_folding: hide
     toc: yes
     toc_float:

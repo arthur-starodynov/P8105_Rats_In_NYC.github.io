@@ -5,6 +5,7 @@ date: "11/20/2023"
 output:
   html_document:
     df_print: paged
+    theme: journal
 ---
 
 ```{r, message = FALSE}

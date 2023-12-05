@@ -2,7 +2,7 @@
 title: "Rat Sightings in NYC"
 output: 
   html_document:
-    theme: cerulean
+    theme: journal
 ---
 
 

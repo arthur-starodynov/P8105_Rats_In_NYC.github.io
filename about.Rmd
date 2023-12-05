@@ -1,8 +1,10 @@
 ---
 title: <center> Our Project & the Screencast
-html_document:
+output: 
+  html_document:
     toc: true
     toc_float: true
+    theme: journal
 ---
 
 <br>
