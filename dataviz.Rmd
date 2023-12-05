@@ -6,6 +6,8 @@ output:
     code_folding: hide
 ---
 
+<font size="4" color="black">
+
 We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps. First, we visualize rat sightings by different measures of time (year, month, and day of the week). Then, we visualize rat sightings by the different types of locations they are found at.
 
 ```{r, warning = F, message = F}
@@ -27,6 +29,24 @@ rats_raw <- read_csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
 ```
 
+### Rat Sightings by Borough
+
+```{r, warning = F, message = F}
+by_borough <- rats_raw %>% 
+  filter(!is.na(borough)) %>%
+  group_by(borough) %>% 
+  count() %>% 
+  ggplot(aes(x = borough, y = n, fill = n)) + 
+  geom_histogram(stat = "identity", position = "dodge") +
+  theme(legend.position ='none',axis.title = element_text(),axis.text.x = element_text(size = 12)) +
+  xlab("Borough") + 
+  ylab("Count") +
+  geom_text(aes(label = n), vjust = -0.1, size = 3.75) +
+  ggtitle('Count of Rat Sightings by Borough') + 
+  scale_fill_gradientn(name = '',colours = rev(brewer.pal(10,'Spectral'))) 
+
+by_borough
+```
 
 ### Rat Sightings by Year
 
@@ -110,3 +130,5 @@ ggplot(data = for_location_type, aes(x = fct_infreq(location_type))) +
 ```
 
 The above shows the top 6 location types for rat sightings. 3+ Family Apt. Buildings report the highest amount of rat sightings among all location types, while 1-2 Family Dwellings and 3+ Family Mixed Use Buildings report the next two highest amount of sightings. These location types are followed by commercial buildings, vacant lots, and construction sites.
+
+<font>
