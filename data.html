@@ -11,7 +11,7 @@
 
 
 
-<title>Data Sources</title>
+<title>Data</title>
 
 <script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -33,6 +33,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
@@ -223,6 +224,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -380,13 +384,23 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">Data Sources</h1>
+
+<h1 class="title toc-ignore">Data</h1>
 
 </div>
 
 
+<p><br></p>
+<p><font size="4" color="black"></p>
 <div id="data-sources" class="section level2">
 <h2>Data Sources</h2>
 <p>The source for our data comes from <a
@@ -1229,7 +1243,37 @@ NA
 </tbody>
 </table>
 </div>
-<p><br> ## Data Cleaning</p>
+<p><br></p>
+</div>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<p>The data cleaning steps involve the following:</p>
+<ul>
+<li>We specified the values (““,”NA”, “N/A”, “Unspecified”) that should
+be treated as missing (NA) in the dataset.</li>
+<li>We used the <code>clean_names</code> function from the
+<code>janitor</code> package to clean the column names of the data
+frame.</li>
+<li>We used the <code>mutate</code> function from the <code>dplyr</code>
+package to create a new column named <code>created_date</code>.
+<ul>
+<li>We used the <code>mdy_hms</code> function from the lubridate package
+to convert the <code>created_date</code> column to a datetime
+format.</li>
+</ul></li>
+<li>We further used the <code>mutate</code> function to create
+additional columns that are releated to the <code>created_date</code>
+column:
+<ul>
+<li><code>sighting_year</code>: We extracted the year.</li>
+<li><code>sighting_month_num</code>: We extracted the numeric
+month.</li>
+<li><code>sighting_month</code>: We extracted the full month name.</li>
+<li><code>sighting_day</code>: We extracted the day of the month.</li>
+<li><code>sighting_weekday</code>: We extracted the full weekday
+name.</li>
+</ul></li>
+</ul>
 <pre class="r"><code>rats_raw &lt;- read.csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &quot;NA&quot;, &quot;N/A&quot;, &quot;Unspecified&quot;)) %&gt;%
   janitor::clean_names() %&gt;% 
   mutate(created_date = mdy_hms(created_date)) %&gt;%
@@ -1485,7 +1529,8 @@ BROOKLYN
 </tbody>
 </table>
 </div>
-<p><br></p>
+<p><br> The table below displays the full tidied data, and summarizes
+each variable within the dataset.</p>
 <pre class="r"><code>summary(cleaner_rats) %&gt;% 
   knitr::kable(digits = 3) %&gt;% 
   kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;), font_size = 12) %&gt;% 
@@ -1771,6 +1816,12 @@ NA
 </tbody>
 </table>
 </div>
+<p><br></p>
+<p>Our resulting dataset contains 219304 observations and 10 variables,
+with information about the unique key, agency, descriptor, location
+type, incident address, incident zipcode, street name, borough, latitude
+and longitude.</p>
+<p><font></p>
 </div>
 
 
@@ -1808,6 +1859,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

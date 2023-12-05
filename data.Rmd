@@ -1,11 +1,16 @@
 ---
-title: "Data Sources"
+title: "Data"
 output: 
   html_document:
     toc: true
     toc_float: true
     theme: journal
+    code_folding: "hide"
 ---
+
+<br>
+
+<font size="4" color="black">
 
 ```{r setup, include = FALSE}
 library(tidyverse)
@@ -27,9 +32,10 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 The source for our data comes from [NYC Open Data ](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe/data), which provides raw datasets produced by the City government in which New Yorkers are encouraged to use for data wrangling and analysis. The raw data contains 232,090 records of rat sightings and variables relating to geographical location, type of location, and time of sighting.
 
 ## Data Import
+
 The dataset was distributed as a CSV file, `Rat_Sightings.csv`. Let’s load and inspect the variables in the raw data.
 
-```{r load}
+```{r}
 rats_raw = read_csv('Rat_Sightings.csv')
 
 head(rats_raw) %>% 
@@ -38,7 +44,22 @@ head(rats_raw) %>%
   kableExtra::scroll_box(width = "100%", height = "300px")
 ```
 <br>
+
 ## Data Cleaning 
+
+The data cleaning steps involve the following:
+
+- We specified the values ("", "NA", "N/A", "Unspecified") that should be treated as missing (NA) in the dataset.
+- We used the `clean_names` function from the `janitor` package to clean the column names of the data frame.
+- We used the `mutate` function from the `dplyr` package to create a new column named `created_date`. 
+  - We used the `mdy_hms` function from the lubridate package to convert the `created_date` column to a datetime format. 
+- We further used the `mutate` function to create additional columns that are releated to the `created_date` column:
+  - `sighting_year`: We extracted the year. 
+  - `sighting_month_num`: We extracted the numeric month. 
+  - `sighting_month`: We extracted the full month name. 
+  - `sighting_day`: We extracted the day of the month. 
+  - `sighting_weekday`: We extracted the full weekday name. 
+
 ```{r}
 rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
   janitor::clean_names() %>% 
@@ -69,6 +90,7 @@ head(cleaner_rats) %>%
 ```
 
 <br>
+The table below displays the full tidied data, and summarizes each variable within the dataset.
 
 ```{r}
 summary(cleaner_rats) %>% 
@@ -76,3 +98,10 @@ summary(cleaner_rats) %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), font_size = 12) %>% 
   kableExtra::scroll_box(width = "100%", height = "300px")
 ```
+
+<br>
+
+Our resulting dataset contains `r nrow(cleaner_rats)` observations and `r ncol(cleaner_rats)` variables, with information about the unique key, agency, descriptor, location type, incident address, incident zipcode, street name, borough, latitude and longitude. 
+
+
+<font>
