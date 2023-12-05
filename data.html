@@ -35,6 +35,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -385,7 +387,849 @@ div.tocify {
 </div>
 
 
+<div id="data-sources" class="section level2">
+<h2>Data Sources</h2>
+<p>The source for our data comes from <a
+href="https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe/data">NYC
+Open Data</a>, which provides raw datasets produced by the City
+government in which New Yorkers are encouraged to use for data wrangling
+and analysis. The raw data contains 232,090 records of rat sightings and
+variables relating to geographical location, type of location, and time
+of sighting.</p>
+</div>
+<div id="data-import" class="section level2">
+<h2>Data Import</h2>
+<p>The dataset was distributed as a CSV file,
+<code>Rat_Sightings.csv</code>. Let’s load and inspect the variables in
+the raw data.</p>
+<pre class="r"><code>rats_raw = read_csv(&#39;Rat_Sightings.csv&#39;)
 
+head(rats_raw) %&gt;% 
+  knitr::kable(digits = 3) %&gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;), font_size = 12) %&gt;% 
+  kableExtra::scroll_box(width = &quot;100%&quot;, height = &quot;300px&quot;)</code></pre>
+<div
+style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:100%; ">
+<table class="table table-striped table-hover" style="font-size: 12px; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+Unique Key
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Created Date
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Closed Date
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Agency
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Agency Name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Complaint Type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Descriptor
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Location Type
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+Incident Zip
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Incident Address
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Street Name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Cross Street 1
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Cross Street 2
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Intersection Street 1
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Intersection Street 2
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Address Type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+City
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Landmark
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Facility Type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Status
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Due Date
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Resolution Action Updated Date
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Community Board
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Borough
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+X Coordinate (State Plane)
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+Y Coordinate (State Plane)
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Park Facility Name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Park Borough
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Vehicle Type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Taxi Company Borough
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Taxi Pick Up Location
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Bridge Highway Name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Bridge Highway Direction
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Road Ramp
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Bridge Highway Segment
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+Latitude
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+Longitude
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Location
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+15636547
+</td>
+<td style="text-align:left;">
+01/02/2010 09:38:29 AM
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Department of Health and Mental Hygiene
+</td>
+<td style="text-align:left;">
+Rodent
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+Other (Explain Below)
+</td>
+<td style="text-align:right;">
+11432
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+JAMAICA AVENUE
+</td>
+<td style="text-align:left;">
+PARSONS BOULEVARD
+</td>
+<td style="text-align:left;">
+INTERSECTION
+</td>
+<td style="text-align:left;">
+JAMAICA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+N/A
+</td>
+<td style="text-align:left;">
+Pending
+</td>
+<td style="text-align:left;">
+02/01/2010 09:38:29 AM
+</td>
+<td style="text-align:left;">
+01/02/2010 09:45:41 AM
+</td>
+<td style="text-align:left;">
+12 QUEENS
+</td>
+<td style="text-align:left;">
+QUEENS
+</td>
+<td style="text-align:right;">
+1039647
+</td>
+<td style="text-align:right;">
+195586
+</td>
+<td style="text-align:left;">
+Unspecified
+</td>
+<td style="text-align:left;">
+QUEENS
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+40.703
+</td>
+<td style="text-align:right;">
+-73.800
+</td>
+<td style="text-align:left;">
+(40.70334174980328, -73.80020318978804)
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636689
+</td>
+<td style="text-align:left;">
+01/02/2010 07:09:56 AM
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Department of Health and Mental Hygiene
+</td>
+<td style="text-align:left;">
+Rodent
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+Catch Basin/Sewer
+</td>
+<td style="text-align:right;">
+11204
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+WEST 4 STREET
+</td>
+<td style="text-align:left;">
+AVENUE P
+</td>
+<td style="text-align:left;">
+INTERSECTION
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+N/A
+</td>
+<td style="text-align:left;">
+Pending
+</td>
+<td style="text-align:left;">
+02/01/2010 07:09:56 AM
+</td>
+<td style="text-align:left;">
+01/02/2010 07:17:22 AM
+</td>
+<td style="text-align:left;">
+11 BROOKLYN
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:right;">
+990421
+</td>
+<td style="text-align:right;">
+160893
+</td>
+<td style="text-align:left;">
+Unspecified
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+40.608
+</td>
+<td style="text-align:right;">
+-73.978
+</td>
+<td style="text-align:left;">
+(40.60828832742201, -73.97777515791093)
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636710
+</td>
+<td style="text-align:left;">
+01/02/2010 09:04:46 AM
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Department of Health and Mental Hygiene
+</td>
+<td style="text-align:left;">
+Rodent
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Mixed Use Building
+</td>
+<td style="text-align:right;">
+11375
+</td>
+<td style="text-align:left;">
+68-12 YELLOWSTON BOULEVARD
+</td>
+<td style="text-align:left;">
+YELLOWSTON BOULEVARD
+</td>
+<td style="text-align:left;">
+68 AVENUE
+</td>
+<td style="text-align:left;">
+68 ROAD
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+ADDRESS
+</td>
+<td style="text-align:left;">
+FOREST HILLS
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+N/A
+</td>
+<td style="text-align:left;">
+Pending
+</td>
+<td style="text-align:left;">
+02/01/2010 09:04:46 AM
+</td>
+<td style="text-align:left;">
+01/02/2010 09:14:11 AM
+</td>
+<td style="text-align:left;">
+06 QUEENS
+</td>
+<td style="text-align:left;">
+QUEENS
+</td>
+<td style="text-align:right;">
+1026289
+</td>
+<td style="text-align:right;">
+203836
+</td>
+<td style="text-align:left;">
+Unspecified
+</td>
+<td style="text-align:left;">
+QUEENS
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+40.726
+</td>
+<td style="text-align:right;">
+-73.848
+</td>
+<td style="text-align:left;">
+(40.726059538480236, -73.84832900182792)
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636731
+</td>
+<td style="text-align:left;">
+01/02/2010 06:27:59 PM
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Department of Health and Mental Hygiene
+</td>
+<td style="text-align:left;">
+Rodent
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Mixed Use Building
+</td>
+<td style="text-align:right;">
+11233
+</td>
+<td style="text-align:left;">
+1040 HERKIMER STREET
+</td>
+<td style="text-align:left;">
+HERKIMER STREET
+</td>
+<td style="text-align:left;">
+HOWARD AVENUE
+</td>
+<td style="text-align:left;">
+DEWEY PLACE
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+ADDRESS
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+N/A
+</td>
+<td style="text-align:left;">
+Pending
+</td>
+<td style="text-align:left;">
+02/01/2010 06:27:59 PM
+</td>
+<td style="text-align:left;">
+01/02/2010 06:37:44 PM
+</td>
+<td style="text-align:left;">
+03 BROOKLYN
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:right;">
+1006739
+</td>
+<td style="text-align:right;">
+186285
+</td>
+<td style="text-align:left;">
+Unspecified
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+40.678
+</td>
+<td style="text-align:right;">
+-73.919
+</td>
+<td style="text-align:left;">
+(40.67795748580213, -73.91892129635086)
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636907
+</td>
+<td style="text-align:left;">
+01/02/2010 12:50:16 PM
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Department of Health and Mental Hygiene
+</td>
+<td style="text-align:left;">
+Rodent
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Apt. Building
+</td>
+<td style="text-align:right;">
+10034
+</td>
+<td style="text-align:left;">
+241 SHERMAN AVENUE
+</td>
+<td style="text-align:left;">
+SHERMAN AVENUE
+</td>
+<td style="text-align:left;">
+WEST 207 STREET
+</td>
+<td style="text-align:left;">
+ISHAM STREET
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+ADDRESS
+</td>
+<td style="text-align:left;">
+NEW YORK
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+N/A
+</td>
+<td style="text-align:left;">
+Pending
+</td>
+<td style="text-align:left;">
+02/01/2010 12:50:16 PM
+</td>
+<td style="text-align:left;">
+01/02/2010 01:00:54 PM
+</td>
+<td style="text-align:left;">
+12 MANHATTAN
+</td>
+<td style="text-align:left;">
+MANHATTAN
+</td>
+<td style="text-align:right;">
+1006543
+</td>
+<td style="text-align:right;">
+254798
+</td>
+<td style="text-align:left;">
+Unspecified
+</td>
+<td style="text-align:left;">
+MANHATTAN
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+40.866
+</td>
+<td style="text-align:right;">
+-73.919
+</td>
+<td style="text-align:left;">
+(40.86600810878767, -73.9194006525354)
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636975
+</td>
+<td style="text-align:left;">
+01/02/2010 01:07:42 PM
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Department of Health and Mental Hygiene
+</td>
+<td style="text-align:left;">
+Rodent
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Apt. Building
+</td>
+<td style="text-align:right;">
+10452
+</td>
+<td style="text-align:left;">
+1270 GERARD AVENUE
+</td>
+<td style="text-align:left;">
+GERARD AVENUE
+</td>
+<td style="text-align:left;">
+EAST 168 STREET
+</td>
+<td style="text-align:left;">
+BEND
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+ADDRESS
+</td>
+<td style="text-align:left;">
+BRONX
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+N/A
+</td>
+<td style="text-align:left;">
+Pending
+</td>
+<td style="text-align:left;">
+02/01/2010 01:07:42 PM
+</td>
+<td style="text-align:left;">
+01/02/2010 01:13:07 PM
+</td>
+<td style="text-align:left;">
+04 BRONX
+</td>
+<td style="text-align:left;">
+BRONX
+</td>
+<td style="text-align:right;">
+1006574
+</td>
+<td style="text-align:right;">
+244239
+</td>
+<td style="text-align:left;">
+Unspecified
+</td>
+<td style="text-align:left;">
+BRONX
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+40.837
+</td>
+<td style="text-align:right;">
+-73.919
+</td>
+<td style="text-align:left;">
+(40.83702671984958, -73.91932373285213)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 
 
 

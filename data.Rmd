@@ -7,3 +7,33 @@ output:
     theme: journal
 ---
 
+```{r setup, include = FALSE}
+library(tidyverse)
+library(readr)
+library(plotly)
+library(knitr)
+
+knitr::opts_chunk$set(
+  warning = FALSE, 
+  message = FALSE,
+  fig.align = 'center')
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+```
+
+
+## Data Sources 
+
+The source for our data comes from [NYC Open Data ](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe/data), which provides raw datasets produced by the City government in which New Yorkers are encouraged to use for data wrangling and analysis. The raw data contains 232,090 records of rat sightings and variables relating to geographical location, type of location, and time of sighting.
+
+## Data Import
+The dataset was distributed as a CSV file, `Rat_Sightings.csv`. Let’s load and inspect the variables in the raw data.
+
+```{r load}
+rats_raw = read_csv('Rat_Sightings.csv')
+
+head(rats_raw) %>% 
+  knitr::kable(digits = 3) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), font_size = 12) %>% 
+  kableExtra::scroll_box(width = "100%", height = "300px")
+
