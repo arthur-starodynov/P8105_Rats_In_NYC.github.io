@@ -6,7 +6,7 @@ navbar:
     - text: "About"
       menu:
       - text: "The Project"
-        href: About.html
+        href: about.html
       - text: "Us"
         href: About_Us.html
     - text: "Project Report"
