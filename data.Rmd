@@ -36,4 +36,4 @@ head(rats_raw) %>%
   knitr::kable(digits = 3) %>% 
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), font_size = 12) %>% 
   kableExtra::scroll_box(width = "100%", height = "300px")
-
+```
