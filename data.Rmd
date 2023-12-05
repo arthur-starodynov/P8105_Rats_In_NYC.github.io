@@ -17,6 +17,9 @@ library(tidyverse)
 library(readr)
 library(plotly)
 library(knitr)
+library(tidyverse)
+library(gtsummary)
+
 
 knitr::opts_chunk$set(
   warning = FALSE, 

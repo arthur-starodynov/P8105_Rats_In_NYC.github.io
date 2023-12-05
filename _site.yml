@@ -12,10 +12,14 @@ navbar:
         href: about.html
       - text: "Us"
         href: About_Us.html
-    - text: "Data Sources"
-      href: data.html 
-    - text: "Data Visualizations"
-      href: dataviz.html
+    - text: "Analysis"
+      menu: 
+      - text: "Data Sources"
+        href: data.html
+      - text: "Exploratory Analysis"
+        href: dataviz.html      
+      - text: "Regression"
+      - text: "Results Summary"
     - text: "Heat Maps"
       href: heatmap.html
     - icon: fa-envelope fa-lg

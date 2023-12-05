@@ -1,12 +1,14 @@
 ---
-title: ""
+title: "Interactive Data"
 output: 
-  html_document:
-    toc: true
-    toc_float: true
-    theme: journal
----
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source: embed
+    theme: simplex
+runtime: shiny
 
+---
 
 ```{r split = FALSE, fig.align = 'default', warning = FALSE, out.width="100%", include = FALSE, message= FALSE}
 library(tidyverse)
@@ -32,9 +34,20 @@ rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
          sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+```
 
-## Overall Sightings Map and Heat Map
+Column {.sidebar}
+-----------------------------------------------------------------------
 
+Welcome to our interactive dashboard. 
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Overall Sightings Map and Heat Map
+
+```{r}
 top = 40.917577 # north lat
 left = -74.259090 # west long
 right = -73.700272 # east long
@@ -59,8 +72,6 @@ count
 nyc = merge(nyc, count, by = "location")
 
 factpal = colorFactor("blue", nyc$n)
-
-
 ```
 
 ```{r,fig.align = 'default', warning = FALSE, out.width="100%", echo = FALSE}
@@ -79,3 +90,5 @@ nyc %>%
 
 ```
 
+Row
+-----------------------------------------------------------------------
