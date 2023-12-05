@@ -37,3 +37,42 @@ head(rats_raw) %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), font_size = 12) %>% 
   kableExtra::scroll_box(width = "100%", height = "300px")
 ```
+<br>
+## Data Cleaning 
+```{r}
+rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
+  janitor::clean_names() %>% 
+  mutate(created_date = mdy_hms(created_date)) %>%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+
+cleaner_rats <- 
+  rats_raw %>%
+  drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %>%
+  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %>%
+  drop_na() %>%
+  janitor::clean_names()
+
+cleaner_rats <- as.data.frame(unclass(cleaner_rats),stringsAsFactors=TRUE)
+```
+
+<br>
+
+```{r}
+head(cleaner_rats) %>% 
+  knitr::kable(digits = 3) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), font_size = 12) %>% 
+  kableExtra::scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+```{r}
+summary(cleaner_rats) %>% 
+  knitr::kable(digits = 3) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"), font_size = 12) %>% 
+  kableExtra::scroll_box(width = "100%", height = "300px")
+```

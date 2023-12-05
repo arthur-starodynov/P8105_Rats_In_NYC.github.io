@@ -1229,6 +1229,548 @@ NA
 </tbody>
 </table>
 </div>
+<p><br> ## Data Cleaning</p>
+<pre class="r"><code>rats_raw &lt;- read.csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &quot;NA&quot;, &quot;N/A&quot;, &quot;Unspecified&quot;)) %&gt;%
+  janitor::clean_names() %&gt;% 
+  mutate(created_date = mdy_hms(created_date)) %&gt;%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+
+cleaner_rats &lt;- 
+  rats_raw %&gt;%
+  drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %&gt;%
+  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %&gt;%
+  drop_na() %&gt;%
+  janitor::clean_names()
+
+cleaner_rats &lt;- as.data.frame(unclass(cleaner_rats),stringsAsFactors=TRUE)</code></pre>
+<p><br></p>
+<pre class="r"><code>head(cleaner_rats) %&gt;% 
+  knitr::kable(digits = 3) %&gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;), font_size = 12) %&gt;% 
+  kableExtra::scroll_box(width = &quot;100%&quot;, height = &quot;300px&quot;)</code></pre>
+<div
+style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:100%; ">
+<table class="table table-striped table-hover" style="font-size: 12px; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+unique_key
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+agency
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+descriptor
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+location_type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+incident_address
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+incident_zip
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+street_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+borough
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+latitude
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+longitude
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+15636710
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Mixed Use Building
+</td>
+<td style="text-align:left;">
+68-12 YELLOWSTON BOULEVARD
+</td>
+<td style="text-align:right;">
+11375
+</td>
+<td style="text-align:left;">
+YELLOWSTON BOULEVARD
+</td>
+<td style="text-align:left;">
+QUEENS
+</td>
+<td style="text-align:right;">
+40.726
+</td>
+<td style="text-align:right;">
+-73.848
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636731
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Mixed Use Building
+</td>
+<td style="text-align:left;">
+1040 HERKIMER STREET
+</td>
+<td style="text-align:right;">
+11233
+</td>
+<td style="text-align:left;">
+HERKIMER STREET
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:right;">
+40.678
+</td>
+<td style="text-align:right;">
+-73.919
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636907
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Apt. Building
+</td>
+<td style="text-align:left;">
+241 SHERMAN AVENUE
+</td>
+<td style="text-align:right;">
+10034
+</td>
+<td style="text-align:left;">
+SHERMAN AVENUE
+</td>
+<td style="text-align:left;">
+MANHATTAN
+</td>
+<td style="text-align:right;">
+40.866
+</td>
+<td style="text-align:right;">
+-73.919
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15636975
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+3+ Family Apt. Building
+</td>
+<td style="text-align:left;">
+1270 GERARD AVENUE
+</td>
+<td style="text-align:right;">
+10452
+</td>
+<td style="text-align:left;">
+GERARD AVENUE
+</td>
+<td style="text-align:left;">
+BRONX
+</td>
+<td style="text-align:right;">
+40.837
+</td>
+<td style="text-align:right;">
+-73.919
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15637261
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+Government Building
+</td>
+<td style="text-align:left;">
+50-03 BROADWAY
+</td>
+<td style="text-align:right;">
+11377
+</td>
+<td style="text-align:left;">
+BROADWAY
+</td>
+<td style="text-align:left;">
+QUEENS
+</td>
+<td style="text-align:right;">
+40.755
+</td>
+<td style="text-align:right;">
+-73.910
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+15637579
+</td>
+<td style="text-align:left;">
+DOHMH
+</td>
+<td style="text-align:left;">
+Rat Sighting
+</td>
+<td style="text-align:left;">
+1-2 Family Dwelling
+</td>
+<td style="text-align:left;">
+764 EAST 82 STREET
+</td>
+<td style="text-align:right;">
+11236
+</td>
+<td style="text-align:left;">
+EAST 82 STREET
+</td>
+<td style="text-align:left;">
+BROOKLYN
+</td>
+<td style="text-align:right;">
+40.637
+</td>
+<td style="text-align:right;">
+-73.912
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><br></p>
+<pre class="r"><code>summary(cleaner_rats) %&gt;% 
+  knitr::kable(digits = 3) %&gt;% 
+  kableExtra::kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;), font_size = 12) %&gt;% 
+  kableExtra::scroll_box(width = &quot;100%&quot;, height = &quot;300px&quot;)</code></pre>
+<div
+style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:100%; ">
+<table class="table table-striped table-hover" style="font-size: 12px; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+unique_key
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+agency
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+descriptor
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+location_type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+incident_address
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+incident_zip
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+street_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+borough
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+latitude
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+longitude
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Min. :11464394
+</td>
+<td style="text-align:left;">
+DOHMH:219304
+</td>
+<td style="text-align:left;">
+Rat Sighting:219304
+</td>
+<td style="text-align:left;">
+3+ Family Apt. Building :94750
+</td>
+<td style="text-align:left;">
+2131 WALLACE AVENUE: 315
+</td>
+<td style="text-align:left;">
+Min. : 83
+</td>
+<td style="text-align:left;">
+BROADWAY : 1846
+</td>
+<td style="text-align:left;">
+BRONX :40876
+</td>
+<td style="text-align:left;">
+Min. :40.50
+</td>
+<td style="text-align:left;">
+Min. :-74.25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+1st Qu.:30903392
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+1-2 Family Dwelling :42762
+</td>
+<td style="text-align:left;">
+95 EASTERN PARKWAY : 257
+</td>
+<td style="text-align:left;">
+1st Qu.:10128
+</td>
+<td style="text-align:left;">
+EASTERN PARKWAY : 1241
+</td>
+<td style="text-align:left;">
+BROOKLYN :80275
+</td>
+<td style="text-align:left;">
+1st Qu.:40.68
+</td>
+<td style="text-align:left;">
+1st Qu.:-73.97
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Median :40466146
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Other (Explain Below) :29964
+</td>
+<td style="text-align:left;">
+651 BROOKLYN AVENUE: 177
+</td>
+<td style="text-align:left;">
+Median :11104
+</td>
+<td style="text-align:left;">
+GRAND CONCOURSE : 1186
+</td>
+<td style="text-align:left;">
+MANHATTAN :56847
+</td>
+<td style="text-align:left;">
+Median :40.72
+</td>
+<td style="text-align:left;">
+Median :-73.94
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Mean :40645680
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+3+ Family Mixed Use Building:14826
+</td>
+<td style="text-align:left;">
+410 EASTERN PARKWAY: 150
+</td>
+<td style="text-align:left;">
+Mean :10753
+</td>
+<td style="text-align:left;">
+BEDFORD AVENUE : 973
+</td>
+<td style="text-align:left;">
+QUEENS :32768
+</td>
+<td style="text-align:left;">
+Mean :40.74
+</td>
+<td style="text-align:left;">
+Mean :-73.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+3rd Qu.:52176515
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Commercial Building :12014
+</td>
+<td style="text-align:left;">
+1912 AVENUE H : 137
+</td>
+<td style="text-align:left;">
+3rd Qu.:11225
+</td>
+<td style="text-align:left;">
+LAFAYETTE AVENUE: 902
+</td>
+<td style="text-align:left;">
+STATEN ISLAND: 8538
+</td>
+<td style="text-align:left;">
+3rd Qu.:40.81
+</td>
+<td style="text-align:left;">
+3rd Qu.:-73.90
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Max. :59488981
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Vacant Lot : 5219
+</td>
+<td style="text-align:left;">
+41-49 150 STREET : 126
+</td>
+<td style="text-align:left;">
+Max. :12345
+</td>
+<td style="text-align:left;">
+AMSTERDAM AVENUE: 874
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Max. :40.91
+</td>
+<td style="text-align:left;">
+Max. :-73.70
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+(Other) :19769
+</td>
+<td style="text-align:left;">
+(Other) :218142
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+(Other) :212282
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 
 
