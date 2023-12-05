@@ -42,7 +42,7 @@ Column {.sidebar}
 Welcome to our interactive dashboard. 
 
 
-Column {data-width=650}
+Row {data-width=700}
 -----------------------------------------------------------------------
 
 ### Overall Sightings Map and Heat Map
@@ -67,14 +67,9 @@ count = nyc %>%
   group_by(location) %>%
   count()
 
-count 
-
 nyc = merge(nyc, count, by = "location")
 
 factpal = colorFactor("blue", nyc$n)
-```
-
-```{r,fig.align = 'default', warning = FALSE, out.width="100%", echo = FALSE}
 
 nyc %>%
 leaflet() %>% 
@@ -87,8 +82,26 @@ nyc %>%
   addProviderTiles("Esri.NatGeoWorldMap") %>%
   addHeatmap(lng = ~longitude, lat = ~latitude, intensity = ~(nyc$n), blur = 20, max = 0.05, radius = 15) %>%
   setView(lng=center_lon, lat=center_lat,zoom = 10)
-
 ```
 
-Row
------------------------------------------------------------------------
+### Time series plot 
+
+```{r}
+overall <- rats_raw %>% 
+  group_by(sighting_year, sighting_month_num, sighting_day) %>% 
+  summarize(count = n()) %>% 
+  mutate(date = as.Date(paste(sighting_year, sighting_month_num, sighting_day, sep = "-")))
+
+time_series = xts(overall$count , order.by= overall$date)
+
+hchart(time_series, name = "Rat Sightings") %>% 
+  hc_add_theme(hc_theme_darkunica()) %>%
+  hc_credits(enabled = TRUE, text = "Sources: City of New York", style = list(fontSize = "12px")) %>%
+  hc_title(text = "Time Series of NYC Rat Sightings") %>%
+  hc_legend(enabled = TRUE)
+```
+
+
+
+
+
