@@ -2,6 +2,9 @@ name: "Yay internet!"
 output_dir: "."
 navbar:
   title: "Home"
+  left: 
+  - text: "Project Report"
+    href: report.html
   right:
     - text: "About"
       menu:
@@ -9,8 +12,8 @@ navbar:
         href: about.html
       - text: "Us"
         href: About_Us.html
-    - text: "Project Report"
-      href: report.html
+    - text: "Data Sources"
+      href: data.html 
     - text: "Data Visualizations"
       href: dataviz.html
     - text: "Heat Maps"

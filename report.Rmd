@@ -11,6 +11,8 @@ output:
 
 ![](images/ratpic.jpeg){width=300px}
 
+<font size="4" color="black">
+
 ## Motivations
 
 As new and returning residents of New York, we are intrigued by the bustling rat population around us and across each borough. We are interested in exploring the impact of factors like day of the week, month, borough, latitude, longitude, and type of building has on rat sighting around New York. By understanding what influences the amount and location of rat sightings, we will be able to know which areas of the city to avoid and which areas may have the world's best ratatouille.
@@ -225,3 +227,4 @@ nyc %>%
 - pandemic --> restaurants closed, rats scavenging outside so more sightings. Outdoor dining.
 - warmer, wetter summer than usual helps rat populations
 
+<font>

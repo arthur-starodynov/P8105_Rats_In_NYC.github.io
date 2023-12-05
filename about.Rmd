@@ -2,8 +2,6 @@
 title: <center> Our Project & the Screencast
 output: 
   html_document:
-    toc: true
-    toc_float: true
     theme: journal
 ---
 

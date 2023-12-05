@@ -4,9 +4,6 @@ output:
   html_document:
     theme: journal
     code_folding: hide
-    toc: yes
-    toc_float:
-      collapsed: true
 ---
 
 We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps. First, we visualize rat sightings by different measures of time (year, month, and day of the week). Then, we visualize rat sightings by the different types of locations they are found at.

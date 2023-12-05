@@ -13,13 +13,13 @@ library(cropcircles)
 
 <br></br>
 
-# <img src="pictures/yukilow.png" alt="Avatar" width="300" height="300" style="border:2px solid blue"> Yuki Low 
+# <img src="pictures/yukilow.png" alt="Avatar" width="300" height="300"> Yuki Low 
 
 <br></br>
 
-# <img src="pictures/arthur.png" alt="Avatar" width="300" height="300" style="border:2px solid blue"> Arthur Starodynov
+# <img src="pictures/arthur.png" alt="Avatar" width="300" height="300"> Arthur Starodynov
 
 <br></br>
 
-# <img src="pictures/trinaaa.png" alt="Avatar" width="300" height="300" style="border:2px solid blue"> Trina Hofrenning
+# <img src="pictures/trinaaa.png" alt="Avatar" width="300" height="300" > Trina Hofrenning
 
