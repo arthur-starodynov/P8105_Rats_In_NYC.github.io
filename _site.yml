@@ -23,7 +23,6 @@ navbar:
           href: https://github.com/yukilow913/p8105final.git
         - text: Website Repository 
           href: https://github.com/arthur-starodynov/P8105_Rats_In_NYC.github.io
-      
 output:
   html_document:
     theme: journal

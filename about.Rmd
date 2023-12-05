@@ -1,10 +1,18 @@
 ---
-title: "Inspiration"
-output: html_document
+title: <center> Our Project & the Screencast
+html_document:
+    toc: true
+    toc_float: true
 ---
- 
+
+<br>
+
 <font size="4" color="black">
 
 As new and returning residents of New York, we are intrigued by the bustling rat population around us and across each borough. We are interested in exploring the impact of factors like day of the week, month, borough, latitude, longitude, and type of building has on rat sighting around New York. We use a rat sightings dataset made publicly available by NYC Open Data. By understanding what influences the amount and location of rat sightings, we will be able to know which areas of the city to avoid and which areas may have the world’s best ratatouille.
 
+<br>
+The screencast video below explains how to successfully navigate our website, and what is included in our project! 
+
 <font>
+
