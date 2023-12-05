@@ -4,7 +4,11 @@ navbar:
   title: "Home"
   right:
     - text: "About"
-      href: about.html
+      menu:
+      - text: "The Project"
+        href: About.html
+      - text: "Us"
+        href: About_Us.html
     - text: "Project Report"
       href: report.html
     - text: "Data Visualizations"
@@ -15,7 +19,7 @@ navbar:
       href: mailto:<eih2108@cumc.columbia.edu; lel2176@cumc.columbia.edu; yl5503@cumc.columbia.edu; as7123@cumc.columbia.edu>
     - icon: fa-github fa-lg
       menu: 
-        - text: Data Cleaning, Visualization and Statistical Method Repository
+        - text: Project Repository
           href: https://github.com/yukilow913/p8105final.git
         - text: Website Repository 
           href: https://github.com/arthur-starodynov/P8105_Rats_In_NYC.github.io
