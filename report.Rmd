@@ -225,10 +225,10 @@ rats_raw %>%
   slice(1) %>%
   select(sighting_weekday, sighting_month, sighting_year, rat_per_month)
  
-test_month <- broom::tidy(oneway.test(rat_per_month ~ sighting_weekday, data = rat_dow))
+test_dow <- broom::tidy(oneway.test(rat_per_month ~ sighting_weekday, data = rat_dow))
 ```
 
-Weekdays have the most rat sightings, peaking on Mondays and staying relatively high throughout the week, while weekends have much lower counts. Running a one-way ANOVA test on the number of rat sightings (per month) by day of the week, we see that the p-value is statistically significant (`r test_dow %>% pull(p.value)`), meaning that at least one of the day of the week's means is not equal to the others.
+Weekdays have the most rat sightings, peaking on Mondays and staying relatively high throughout the week, while weekends have much lower counts. Running a one-way ANOVA test on the number of rat sightings (per month/year) by day of the week, we see that the p-value is statistically significant (`r test_dow %>% pull(p.value)`), meaning that at least one of the day of the week's means is not equal to the others.
 
 
 
@@ -249,7 +249,7 @@ ggplot(data = for_location_type, aes(x = fct_infreq(location_type))) +
   coord_flip() +
   labs(title = "Top 6 Location Types for Sightings",
        x = "Location Type",
-       y = "Count")
+       y = "Count") 
 ```
 
 ```{r}
@@ -265,7 +265,7 @@ rats_raw %>%
 test_location <- broom::tidy(oneway.test(rat_per_month ~ location_type, data = rat_location))
 ```
 
-The above shows the top 6 location types for rat sightings. 3+ Family Apt. Buildings report the highest amount of rat sightings among all location types, while 1-2 Family Dwellings and 3+ Family Mixed Use Buildings report the next two highest amount of sightings. These location types are followed by commercial buildings, vacant lots, and construction sites. Running a one-way ANOVA test on the number of rat sightings (per month) by location type, we see that the p-value is statistically significant (`r test_month %>% pull(p.value)`), meaning that at least one of the location type's means is not equal to the others.
+The above shows the top 6 location types for rat sightings. 3+ Family Apt. Buildings report the highest amount of rat sightings among all location types, while 1-2 Family Dwellings and 3+ Family Mixed Use Buildings report the next two highest amount of sightings. These location types are followed by commercial buildings, vacant lots, and construction sites. Running a one-way ANOVA test on the number of rat sightings (per month/year) by location type, we see that the p-value is statistically significant (`r test_location %>% pull(p.value)`), meaning that at least one of the location type's means is not equal to the others.
 
 
 ### Interactive Maps
