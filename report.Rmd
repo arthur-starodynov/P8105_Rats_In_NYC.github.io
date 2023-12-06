@@ -154,7 +154,19 @@ by_year <- rats_raw %>%
 by_year
 ```
 
-We see a substantial increase in the number of rat sightings after 2020. This increase is consistent with the city of New York's rat media coverage and the impact of the COVID-19 pandemic. With more restaurants closed and more restaurants offering outdoor dining, rats are more likely to scavenge outside. A warmer, wetter than usual summer in 2021 also contributed to favorable rat conditions. 
+
+```{r, warning = F, message=FALSE}
+rat_year <-
+rats_weekend %>%
+  group_by(sighting_month, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(sighting_month, sighting_year, rat_per_month)
+ 
+test_year <- broom::tidy(oneway.test(rat_per_month ~ sighting_year, data = rat_year))
+```
+
+We see a substantial increase in the number of rat sightings after 2020. This increase is consistent with the city of New York's rat media coverage and the impact of the COVID-19 pandemic. With more restaurants closed and more restaurants offering outdoor dining, rats are more likely to scavenge outside. A warmer, wetter than usual summer in 2021 also contributed to favorable rat conditions. Running a one-sided ANOVA test on monthly rat sightings against year, we see that we the p-value is statistically significant (`r test_year %>% pull(p.value)`), meaning that at least one of the year means is not equal to the others.
 
 ### Rat Sightings by Month
 
