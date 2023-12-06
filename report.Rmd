@@ -102,7 +102,7 @@ Important variables to our analysis include:
 
 ## Exploratory Analyses
 
-We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps.
+We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps. First, we visualize rat sightings by borough, different measures of time (year, month, and day of the week), and the different types of locations they are found at.
 
 ### Rats Sightings by Bourough
 
@@ -123,18 +123,19 @@ by_borough <- rats_raw %>%
 by_borough
 ```
 
-We see that Brooklyn has the highest amount of rats, followed by Manhattan, the Bronx, Queens, and Staten Island. Running a one-way ANOVA test on the number of rat sightings by month, we 
-
 ```{r, warning=F, message=F}
-rat_monthly <-
-rats_weekend %>%
-  group_by(sighting_month, sighting_year) %>%
+rat_borough <-
+rats_raw %>%
+  group_by(borough, sighting_month, sighting_year) %>%
   mutate(rat_per_month = n()) %>%
   slice(1) %>%
-  select(sighting_month, sighting_year, rat_per_month)
+  select(borough, sighting_month, sighting_year, rat_per_month)
 
-oneway.test(rat_per_month ~ sighting_month, data = rat_monthly)
+test_borough <- broom::tidy(oneway.test(rat_per_month ~ borough, data = rat_borough))
 ```
+
+We see that Brooklyn has the highest amount of rats, followed by Manhattan, the Bronx, Queens, and Staten Island. Running a one-way ANOVA test on the number of rat sightings (per month/year) by borough, we see that the p-value is `r test_borough %>% pull(p.value)` and at least one of the borough means is not equal to the others.
+
 
 
 ### Rat Sightings by Year
@@ -155,7 +156,19 @@ by_year <- rats_raw %>%
 by_year
 ```
 
-We see a substantial increase in the number of rat sightings after 2020. This increase is consistent with the city of New York's rat media coverage and the impact of the COVID-19 pandemic. With more restaurants closed and more restaurants offering outdoor dining, rats are more likely to scavenge outside. A warmer, wetter than usual summer in 2021 also contributed to favorable rat conditions. 
+```{r, warning=F, message=F}
+rat_year <-
+rats_raw %>%
+  group_by(sighting_month, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(sighting_month, sighting_year, rat_per_month)
+
+test_year <- broom::tidy(oneway.test(rat_per_month ~ sighting_year, data = rat_year))
+```
+
+We see a substantial increase in the number of rat sightings after 2020. This increase is consistent with the city of New York's rat media coverage and the impact of the COVID-19 pandemic. With more restaurants closed and more restaurants offering outdoor dining, rats are more likely to scavenge outside. A warmer, wetter than usual summer in 2021 also contributed to favorable rat conditions. Running a one-way ANOVA test on the number of rat sightings (per month) by year, we see that the p-value is `r test_year %>% pull(p.value)` so at least one of the borough means is not equal to the others. 
+
 
 ### Rat Sightings by Month
 
@@ -175,7 +188,20 @@ by_month <- rats_raw %>%
 by_month
 ```
 
-The most rat sightings are in the summer months with a peak in July. Sightings taper off in the fall, reaching a low in December, and then start to increase in the spring. Warmer weather is more favorable to rat survival and helps their populations grow.
+```{r, warning=F, message=F}
+rat_monthly <-
+rats_raw %>%
+  group_by(sighting_month, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(sighting_month, sighting_year, rat_per_month)
+
+test_month <- broom::tidy(oneway.test(rat_per_month ~ sighting_month, data = rat_monthly))
+```
+
+The most rat sightings are in the summer months with a peak in July. Sightings taper off in the fall, reaching a low in December, and then start to increase in the spring. Warmer weather is more favorable to rat survival and helps their populations grow. Running a one-way ANOVA test on the number of rat sightings by month, we see that the p-value is `r test_month %>% pull(p.value)` so at least one of the month means is not equal to the others. 
+
+
 
 ### Rat Sightings by Day of the Week
 
@@ -195,7 +221,18 @@ by_day <- rats_raw %>%
 by_day
 ```
 
-Weekdays have the most rat sightings, peaking on Mondays and staying relatively high throughout the week, while weekends have much lower counts. 
+```{r, warning=F, message=F}
+rat_dow <-
+rats_raw %>%
+  group_by(sighting_weekday, sighting_month, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(sighting_weekday, sighting_month, sighting_year, rat_per_month)
+
+test_dow <- broom::tidy(oneway.test(rat_per_month ~ sighting_weekday, data = rat_dow))
+```
+
+Weekdays have the most rat sightings, peaking on Mondays and staying relatively high throughout the week, while weekends have much lower counts. Running a one-way ANOVA test on the number of rat sightings by day of the week, we see that the p-value is `r test_month %>% pull(p.value)` so at least one of the day of the week means is not equal to the others. 
 
 
 ### Rat Sightings by Location Type
@@ -218,7 +255,19 @@ ggplot(data = for_location_type, aes(x = fct_infreq(location_type))) +
        y = "Count")
 ```
 
-The above shows the top 6 location types for rat sightings. 3+ Family Apt. Buildings report the highest amount of rat sightings among all location types, while 1-2 Family Dwellings and 3+ Family Mixed Use Buildings report the next two highest amount of sightings. These location types are followed by commercial buildings, vacant lots, and construction sites.
+```{r, warning=F, message=F}
+rat_location <-
+rats_raw %>%
+  filter(location_type %in% c("3+ Family Apt. Building", "1-2 Family Dwelling", "3+ Family Mixed Use Building", "Commercial Building", "Vacant Lot", "Construction Site")) %>%
+  group_by(location_type, sighting_month, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(location_type, sighting_month, sighting_year, rat_per_month)
+
+test_location <- broom::tidy(oneway.test(rat_per_month ~ location_type, data = rat_location))
+```
+
+The above shows the top 6 location types for rat sightings. 3+ Family Apt. Buildings report the highest amount of rat sightings among all location types, while 1-2 Family Dwellings and 3+ Family Mixed Use Buildings report the next two highest amount of sightings. These location types are followed by commercial buildings, vacant lots, and construction sites. Running an ANOVA for monthly rat sightings against the top 6 location types, there is a p-value of `r test_location %>% pull(p.value)` so at least one of the location type means is not equal to the others. 
 
 
 ### Interactive Maps
@@ -255,7 +304,11 @@ nyc %>%
 
 ## Additional Analyses
 
+Insert modeling 
+
 ## Discussion
+
+Insert discussion
 
 - pandemic --> restaurants closed, rats scavenging outside so more sightings. Outdoor dining.
 - warmer, wetter summer than usual helps rat populations
