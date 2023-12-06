@@ -71,12 +71,18 @@ rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_month_num = month(created_date),
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
-         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) %>% 
+  mutate(season = case_when(sighting_month_num %in% c(12, 1, 2) ~ "Winter",
+                            sighting_month_num %in% c(3, 4, 5) ~ "Spring",
+                            sighting_month_num %in% c(6, 7, 8) ~ "Summer",
+                            sighting_month_num %in% c(9, 10, 11) ~ "Fall"))
+
+rats_raw
 
 cleaner_rats <- 
   rats_raw %>%
   drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %>%
-  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %>%
+  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude, season) %>%
   drop_na() %>%
   janitor::clean_names()
 

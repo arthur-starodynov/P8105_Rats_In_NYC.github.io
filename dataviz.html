@@ -356,7 +356,11 @@ rats_raw &lt;- read_csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &q
          sighting_month_num = month(created_date),
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
-         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) </code></pre>
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) %&gt;% 
+  mutate(season = case_when(sighting_month_num %in% c(12, 1, 2) ~ &quot;Winter&quot;,
+                            sighting_month_num %in% c(3, 4, 5) ~ &quot;Spring&quot;,
+                            sighting_month_num %in% c(6, 7, 8) ~ &quot;Summer&quot;,
+                            sighting_month_num %in% c(9, 10, 11) ~ &quot;Fall&quot;)) </code></pre>
 <div id="rat-sightings-by-borough" class="section level3">
 <h3>Rat Sightings by Borough</h3>
 <pre class="r"><code>by_borough &lt;- rats_raw %&gt;% 
@@ -419,6 +423,23 @@ Sightings taper off in the fall, reaching a low in December, and then
 start to increase in the spring. Warmer weather is more favorable to rat
 survival and helps their populations grow.</p>
 </div>
+<div id="rat-sightings-by-season" class="section level3">
+<h3>Rat Sightings by Season</h3>
+<pre class="r"><code>by_year &lt;- rats_raw %&gt;% 
+  group_by(season) %&gt;% 
+  count() %&gt;% 
+  ggplot(aes(x = season, y = n, fill = n)) + 
+  geom_histogram(stat = &quot;identity&quot;, position = &quot;dodge&quot;) +
+  theme(legend.position =&#39;none&#39;,axis.title = element_text(),axis.text.x = element_text(size = 12)) +
+  xlab(&quot;Season&quot;) + 
+  ylab(&quot;Count&quot;) +
+  geom_text(aes(label = n), vjust = -0.1, size = 3.75) +
+  ggtitle(&#39;Count of Rat Sightings through the Seasons&#39;) + 
+  scale_fill_gradientn(name = &#39;&#39;,colours = rev(brewer.pal(10,&#39;Spectral&#39;))) 
+
+by_year</code></pre>
+<p><img src="dataviz_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
 <div id="rat-sightings-by-day-of-the-week" class="section level3">
 <h3>Rat Sightings by Day of the Week</h3>
 <pre class="r"><code>by_day &lt;- rats_raw %&gt;% 
@@ -434,7 +455,7 @@ survival and helps their populations grow.</p>
   scale_fill_gradientn(name = &#39;&#39;,colours = rev(brewer.pal(10,&#39;Spectral&#39;))) 
 
 by_day</code></pre>
-<p><img src="dataviz_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="dataviz_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <p>Weekdays have the most rat sightings, peaking on Mondays and staying
 relatively high throughout the week, while weekends have much lower
 counts.</p>
@@ -456,7 +477,7 @@ ggplot(data = for_location_type, aes(x = fct_infreq(location_type))) +
   labs(title = &quot;Top 6 Location Types for Sightings&quot;,
        x = &quot;Location Type&quot;,
        y = &quot;Count&quot;)</code></pre>
-<p><img src="dataviz_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="dataviz_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>The above shows the top 6 location types for rat sightings. 3+ Family
 Apt. Buildings report the highest amount of rat sightings among all
 location types, while 1-2 Family Dwellings and 3+ Family Mixed Use

@@ -26,7 +26,11 @@ rats_raw <- read_csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_month_num = month(created_date),
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
-         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) %>% 
+  mutate(season = case_when(sighting_month_num %in% c(12, 1, 2) ~ "Winter",
+                            sighting_month_num %in% c(3, 4, 5) ~ "Spring",
+                            sighting_month_num %in% c(6, 7, 8) ~ "Summer",
+                            sighting_month_num %in% c(9, 10, 11) ~ "Fall")) 
 ```
 
 ### Rat Sightings by Borough
@@ -87,6 +91,23 @@ by_month
 ```
 
 The most rat sightings are in the summer months with a peak in July. Sightings taper off in the fall, reaching a low in December, and then start to increase in the spring. Warmer weather is more favorable to rat survival and helps their populations grow.
+
+### Rat Sightings by Season 
+```{r, warning = F, message = F}
+by_year <- rats_raw %>% 
+  group_by(season) %>% 
+  count() %>% 
+  ggplot(aes(x = season, y = n, fill = n)) + 
+  geom_histogram(stat = "identity", position = "dodge") +
+  theme(legend.position ='none',axis.title = element_text(),axis.text.x = element_text(size = 12)) +
+  xlab("Season") + 
+  ylab("Count") +
+  geom_text(aes(label = n), vjust = -0.1, size = 3.75) +
+  ggtitle('Count of Rat Sightings through the Seasons') + 
+  scale_fill_gradientn(name = '',colours = rev(brewer.pal(10,'Spectral'))) 
+
+by_year
+```
 
 ### Rat Sightings by Day of the Week
 
