@@ -348,6 +348,7 @@ library(xts)
 library(&quot;RColorBrewer&quot;)
 library(&quot;ggthemes&quot;)
 library(&quot;gridExtra&quot;)
+library(WRS2)
 
 rats_raw &lt;- read_csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &quot;NA&quot;, &quot;N/A&quot;, &quot;Unspecified&quot;)) %&gt;%
   janitor::clean_names() %&gt;% 
@@ -360,7 +361,25 @@ rats_raw &lt;- read_csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &q
   mutate(season = case_when(sighting_month_num %in% c(12, 1, 2) ~ &quot;Winter&quot;,
                             sighting_month_num %in% c(3, 4, 5) ~ &quot;Spring&quot;,
                             sighting_month_num %in% c(6, 7, 8) ~ &quot;Summer&quot;,
-                            sighting_month_num %in% c(9, 10, 11) ~ &quot;Fall&quot;)) </code></pre>
+                            sighting_month_num %in% c(9, 10, 11) ~ &quot;Fall&quot;))
+
+ head(rats_raw)</code></pre>
+<pre><code>## # A tibble: 6 × 44
+##   unique_key created_date        closed_date agency agency_name   complaint_type
+##        &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;         &lt;chr&gt;         
+## 1   15636547 2010-01-02 09:38:29 &lt;NA&gt;        DOHMH  Department o… Rodent        
+## 2   15636689 2010-01-02 07:09:56 &lt;NA&gt;        DOHMH  Department o… Rodent        
+## 3   15636710 2010-01-02 09:04:46 &lt;NA&gt;        DOHMH  Department o… Rodent        
+## 4   15636731 2010-01-02 18:27:59 &lt;NA&gt;        DOHMH  Department o… Rodent        
+## 5   15636907 2010-01-02 12:50:16 &lt;NA&gt;        DOHMH  Department o… Rodent        
+## 6   15636975 2010-01-02 13:07:42 &lt;NA&gt;        DOHMH  Department o… Rodent        
+## # ℹ 38 more variables: descriptor &lt;chr&gt;, location_type &lt;chr&gt;,
+## #   incident_zip &lt;dbl&gt;, incident_address &lt;chr&gt;, street_name &lt;chr&gt;,
+## #   cross_street_1 &lt;chr&gt;, cross_street_2 &lt;chr&gt;, intersection_street_1 &lt;chr&gt;,
+## #   intersection_street_2 &lt;chr&gt;, address_type &lt;chr&gt;, city &lt;chr&gt;,
+## #   landmark &lt;chr&gt;, facility_type &lt;lgl&gt;, status &lt;chr&gt;, due_date &lt;chr&gt;,
+## #   resolution_action_updated_date &lt;chr&gt;, community_board &lt;chr&gt;, borough &lt;chr&gt;,
+## #   x_coordinate_state_plane &lt;dbl&gt;, y_coordinate_state_plane &lt;dbl&gt;, …</code></pre>
 <div id="rat-sightings-by-borough" class="section level3">
 <h3>Rat Sightings by Borough</h3>
 <pre class="r"><code>by_borough &lt;- rats_raw %&gt;% 
@@ -425,7 +444,7 @@ survival and helps their populations grow.</p>
 </div>
 <div id="rat-sightings-by-season" class="section level3">
 <h3>Rat Sightings by Season</h3>
-<pre class="r"><code>by_year &lt;- rats_raw %&gt;% 
+<pre class="r"><code>by_season &lt;- rats_raw %&gt;% 
   group_by(season) %&gt;% 
   count() %&gt;% 
   ggplot(aes(x = season, y = n, fill = n)) + 
@@ -437,7 +456,7 @@ survival and helps their populations grow.</p>
   ggtitle(&#39;Count of Rat Sightings through the Seasons&#39;) + 
   scale_fill_gradientn(name = &#39;&#39;,colours = rev(brewer.pal(10,&#39;Spectral&#39;))) 
 
-by_year</code></pre>
+by_season</code></pre>
 <p><img src="dataviz_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 </div>
 <div id="rat-sightings-by-day-of-the-week" class="section level3">
@@ -484,6 +503,87 @@ location types, while 1-2 Family Dwellings and 3+ Family Mixed Use
 Buildings report the next two highest amount of sightings. These
 location types are followed by commercial buildings, vacant lots, and
 construction sites.</p>
+<pre class="r"><code>rat_location &lt;-
+rats_raw %&gt;%
+  filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
+  group_by(location_type, sighting_month_num, sighting_year) %&gt;%
+  mutate(rat_per_month = n()) %&gt;%
+  slice(1) %&gt;%
+  select(location_type, sighting_month_num, sighting_year, rat_per_month) %&gt;% 
+  mutate(sighting_month_num = as.factor(sighting_month_num))
+
+rat_location</code></pre>
+<pre><code>## # A tibble: 1,002 × 4
+## # Groups:   location_type, sighting_month_num, sighting_year [1,002]
+##    location_type       sighting_month_num sighting_year rat_per_month
+##    &lt;chr&gt;               &lt;fct&gt;                      &lt;dbl&gt;         &lt;int&gt;
+##  1 1-2 Family Dwelling 1                           2010            97
+##  2 1-2 Family Dwelling 1                           2011            76
+##  3 1-2 Family Dwelling 1                           2012           105
+##  4 1-2 Family Dwelling 1                           2013           112
+##  5 1-2 Family Dwelling 1                           2014            64
+##  6 1-2 Family Dwelling 1                           2015           116
+##  7 1-2 Family Dwelling 1                           2016           121
+##  8 1-2 Family Dwelling 1                           2017           191
+##  9 1-2 Family Dwelling 1                           2018           135
+## 10 1-2 Family Dwelling 1                           2019           163
+## # ℹ 992 more rows</code></pre>
+<pre class="r"><code>lin_reg_result &lt;- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type, data = rat_location)
+summary(lin_reg_result)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = rat_per_month ~ sighting_year + sighting_month_num + 
+##     location_type, data = rat_location)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -341.82  -45.39   -3.49   42.11  590.61 
+## 
+## Coefficients:
+##                                             Estimate Std. Error t value
+## (Intercept)                               -2.548e+04  1.539e+03 -16.560
+## sighting_year                              1.274e+01  7.631e-01  16.696
+## sighting_month_num2                       -5.000e-01  1.494e+01  -0.033
+## sighting_month_num3                        3.106e+01  1.494e+01   2.078
+## sighting_month_num4                        5.406e+01  1.494e+01   3.618
+## sighting_month_num5                        8.969e+01  1.494e+01   6.002
+## sighting_month_num6                        9.925e+01  1.494e+01   6.642
+## sighting_month_num7                        1.064e+02  1.494e+01   7.120
+## sighting_month_num8                        1.021e+02  1.494e+01   6.831
+## sighting_month_num9                        7.700e+01  1.494e+01   5.153
+## sighting_month_num10                       5.902e+01  1.494e+01   3.950
+## sighting_month_num11                       3.964e+00  1.494e+01   0.265
+## sighting_month_num12                      -3.100e+00  1.523e+01  -0.204
+## location_type3+ Family Apt. Building       3.124e+02  1.060e+01  29.479
+## location_type3+ Family Mixed Use Building -1.698e+02  1.060e+01 -16.024
+## location_typeCommercial Building          -1.838e+02  1.060e+01 -17.347
+## location_typeConstruction Site            -2.296e+02  1.060e+01 -21.660
+## location_typeVacant Lot                   -2.238e+02  1.060e+01 -21.114
+##                                           Pr(&gt;|t|)    
+## (Intercept)                                &lt; 2e-16 ***
+## sighting_year                              &lt; 2e-16 ***
+## sighting_month_num2                       0.973315    
+## sighting_month_num3                       0.037923 *  
+## sighting_month_num4                       0.000312 ***
+## sighting_month_num5                       2.74e-09 ***
+## sighting_month_num6                       5.12e-11 ***
+## sighting_month_num7                       2.08e-12 ***
+## sighting_month_num8                       1.48e-11 ***
+## sighting_month_num9                       3.10e-07 ***
+## sighting_month_num10                      8.38e-05 ***
+## sighting_month_num11                      0.790843    
+## sighting_month_num12                      0.838755    
+## location_type3+ Family Apt. Building       &lt; 2e-16 ***
+## location_type3+ Family Mixed Use Building  &lt; 2e-16 ***
+## location_typeCommercial Building           &lt; 2e-16 ***
+## location_typeConstruction Site             &lt; 2e-16 ***
+## location_typeVacant Lot                    &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 96.84 on 984 degrees of freedom
+## Multiple R-squared:  0.8182, Adjusted R-squared:  0.8151 
+## F-statistic: 260.5 on 17 and 984 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p><font></p>
 </div>
 

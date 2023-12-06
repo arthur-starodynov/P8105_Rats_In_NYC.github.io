@@ -7,13 +7,13 @@ output:
     theme: journal
     code_folding: "hide"
 ---
+<br>
 
-Load packages 
+<font size="4" color="black">
 
+We first loaded the necessary packages to start on building regression models and the cleaned rat dataset 
 
-
-
-```{r, message = FALSE,}
+```{r, message = FALSE}
 library(tidyverse)
 library(lubridate)
 library(readr) 
@@ -29,6 +29,8 @@ library("highcharter")
 library(scales)
 library(leaflet.extras)
 library(modelr)
+library(broom)
+
 rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
   janitor::clean_names() %>% 
   mutate(created_date = mdy_hms(created_date)) %>%
@@ -39,133 +41,64 @@ rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
 ```
 
-
-
-
-
-
-
-Clean data set more on the predictor variables that were googled through research to have the most effect on rat sightings, keeping borough and location type. 
-
-
-
-
-
-
+We did further literature research and found 3 variables that we thought would be useful in predicting the number of rats per month. 
 
 ```{r, results= FALSE}
-cleaner_rats <- 
-  rats_raw %>%
-  drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %>%
-  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %>%
-  drop_na() %>%
-  janitor::clean_names()
-
-cleaner_rats <- as.data.frame(unclass(cleaner_rats),stringsAsFactors=TRUE)
-cleaner_rats
-sample_1 <- cleaner_rats[sample(nrow(cleaner_rats), 500), ]
+rat_location <-
+rats_raw %>%
+  filter(location_type %in% c("3+ Family Apt. Building", "1-2 Family Dwelling", "3+ Family Mixed Use Building", "Commercial Building", "Vacant Lot", "Construction Site")) %>%
+  group_by(location_type, sighting_month_num, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(location_type, sighting_month_num, sighting_year, rat_per_month) %>% 
+  mutate(sighting_month_num = as.factor(sighting_month_num))
 ```
 
+We built a model that predicts rats per month from sighting year, sighting month, and location type. 
 
-
-
-
-
-Run a linear model on the cleaner data set to be able to see which predictor variables had the most impact on the model by looking at their P values. 
-
-
-
-
-
-
-
-```{r, results= FALSE}
-model1 <-  lm(latitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
-model2 <-  lm(longitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
-summary(model1)
-summary(model2)
-
-
+```{r, results = FALSE}
+model <- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type, data = rat_location)
+summary(model)
 ```
 
-
-
-
-
-
-
-Simply run a kfold technique to have a training and testing data set, run a new linear regression model to see the effect on latitude using 
-
-
-
-
+We then ran a k-fold cross-validation technique to create training and testing data sets and ran a new linear regression model for each of the training sets.
 
 ```{r, results = FALSE}
 set.seed(23) 
-cleaner_rats1 <- 
-  sample_1 %>% 
-  select(location_type, borough,incident_zip, street_name, latitude)
-
-rats_folds <- crossv_kfold(cleaner_rats1, k = 10)
-
-rats_folds <- rats_folds %>% mutate(model4 = map(train, ~ lm(latitude ~ ., data = .)))
-
-rats_folds$model4[[1]] %>% summary()
-
+rats_folds <- crossv_kfold(rat_location, k = 10)
+rats_folds <- rats_folds %>% mutate(model = map(train, ~ lm(rat_per_month ~ ., data = .)))
 ```
 
+We generated predictions using the models fitted during k-fold cross-validation. 
 
 ```{r, results = FALSE}
-set.seed(23) 
-cleaner_rats2 <- 
-  sample_1 %>% 
-  select(location_type, borough, street_name, incident_zip, longitude)
-
-rats_folds2 <- crossv_kfold(cleaner_rats2, k = 10)
-
-rats_folds2 <- rats_folds2 %>% mutate(model = map(train, ~ lm(longitude ~ ., data = .)))
-
-rats_folds2$model[[1]] %>% summary()
-
-```
-
-This is the longitude prediciton
-
-```{r, results = FALSE}
-library(broom)
-
 prediction <- 
-  rats_folds2 %>%
+  rats_folds %>%
   mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %>% 
   unnest(predicted)
 prediction
 ```
 
-We compare by looking to residual
+We created a residual plot to visually assess the performance of our model.
 
-```{r}
+```{r, message = FALSE}
 prediction <- prediction %>% 
-  mutate(residual = .fitted - longitude)
+  mutate(residual = .fitted - rat_per_month)
 
 prediction%>%
-  ggplot(aes(longitude, residual)) +
+  ggplot(aes(rat_per_month, residual)) +
     geom_hline(yintercept = 0) +
     geom_point() +
     stat_smooth(method = "loess") +
     theme_minimal()
-
-
 ```
 
 
-We compare the R^2 and look at the residuals 
-
-
-```{r}
+```{r, message = FALSE}
 rs <- prediction %>%
   group_by(.id) %>% 
   summarise(
-    sst = sum((longitude - mean(longitude)) ^ 2), # Sum of Squares Total
+    sst = sum((rat_per_month - mean(rat_per_month)) ^ 2), # Sum of Squares Total
     sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
     r.squared = 1 - sse / sst         # Proportion of variance accounted for
     )
@@ -176,50 +109,4 @@ rs %>%
     geom_vline(aes(xintercept = mean(r.squared)))
 
 ```
-
-
-
-Same process as above for the latitude
-
-```{r, results = FALSE}
-library(broom)
-
-prediction2 <- 
-  rats_folds %>%
-  mutate(predicted = map2(model4, train, ~ augment(.x, newdata = .y))) %>% 
-  unnest(predicted)
-prediction
-```
-
-```{r}
-prediction2 <- prediction2 %>% 
-  mutate(residual = .fitted - latitude)
-
-prediction2%>%
-  ggplot(aes(latitude, residual)) +
-    geom_hline(yintercept = 0) +
-    geom_point() +
-    stat_smooth(method = "loess") +
-    theme_minimal()
-```
-
-
-```{r}
-rs2 <- prediction2 %>%
-  group_by(.id) %>% 
-  summarise(
-    sst = sum((latitude - mean(latitude)) ^ 2), # Sum of Squares Total
-    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
-    r.squared = 1 - sse / sst         # Proportion of variance accounted for
-    )
-
-rs2 %>% 
-  ggplot(aes(r.squared, fill  = .id)) +
-    geom_histogram() +
-    geom_vline(aes(xintercept = mean(r.squared)))
-
-
-
-```
-
 

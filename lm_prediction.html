@@ -410,7 +410,10 @@ div.tocify {
 </div>
 
 
-<p>Load packages</p>
+<p><br></p>
+<p><font size="4" color="black"></p>
+<p>We first loaded the necessary packages to start on building
+regression models and the cleaned rat dataset</p>
 <pre class="r"><code>library(tidyverse)
 library(lubridate)
 library(readr) 
@@ -426,6 +429,8 @@ library(&quot;highcharter&quot;)
 library(scales)
 library(leaflet.extras)
 library(modelr)
+library(broom)
+
 rats_raw &lt;- read.csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &quot;NA&quot;, &quot;N/A&quot;, &quot;Unspecified&quot;)) %&gt;%
   janitor::clean_names() %&gt;% 
   mutate(created_date = mdy_hms(created_date)) %&gt;%
@@ -434,84 +439,49 @@ rats_raw &lt;- read.csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &q
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
          sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) </code></pre>
-<p>Clean data set more on the predictor variables that were googled
-through research to have the most effect on rat sightings, keeping
-borough and location type.</p>
-<pre class="r"><code>cleaner_rats &lt;- 
-  rats_raw %&gt;%
-  drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %&gt;%
-  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %&gt;%
-  drop_na() %&gt;%
-  janitor::clean_names()
-
-cleaner_rats &lt;- as.data.frame(unclass(cleaner_rats),stringsAsFactors=TRUE)
-cleaner_rats
-sample_1 &lt;- cleaner_rats[sample(nrow(cleaner_rats), 500), ]</code></pre>
-<p>Run a linear model on the cleaner data set to be able to see which
-predictor variables had the most impact on the model by looking at their
-P values.</p>
-<pre class="r"><code>model1 &lt;-  lm(latitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
-model2 &lt;-  lm(longitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
-summary(model1)
-summary(model2)</code></pre>
-<p>Simply run a kfold technique to have a training and testing data set,
-run a new linear regression model to see the effect on latitude
-using</p>
+<p>We did further literature research and found 3 variables that we
+thought would be useful in predicting the number of rats per month.</p>
+<pre class="r"><code>rat_location &lt;-
+rats_raw %&gt;%
+  filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
+  group_by(location_type, sighting_month_num, sighting_year) %&gt;%
+  mutate(rat_per_month = n()) %&gt;%
+  slice(1) %&gt;%
+  select(location_type, sighting_month_num, sighting_year, rat_per_month) %&gt;% 
+  mutate(sighting_month_num = as.factor(sighting_month_num))</code></pre>
+<p>We built a model that predicts rats per month from sighting year,
+sighting month, and location type.</p>
+<pre class="r"><code>model &lt;- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type, data = rat_location)
+summary(model)</code></pre>
+<p>We then ran a k-fold cross-validation technique to create training
+and testing data sets and ran a new linear regression model for each of
+the training sets.</p>
 <pre class="r"><code>set.seed(23) 
-cleaner_rats1 &lt;- 
-  sample_1 %&gt;% 
-  select(location_type, borough,incident_zip, street_name, latitude)
-
-rats_folds &lt;- crossv_kfold(cleaner_rats1, k = 10)
-
-rats_folds &lt;- rats_folds %&gt;% mutate(model4 = map(train, ~ lm(latitude ~ ., data = .)))
-
-rats_folds$model4[[1]] %&gt;% summary()</code></pre>
-<pre class="r"><code>set.seed(23) 
-cleaner_rats2 &lt;- 
-  sample_1 %&gt;% 
-  select(location_type, borough, street_name, incident_zip, longitude)
-
-rats_folds2 &lt;- crossv_kfold(cleaner_rats2, k = 10)
-
-rats_folds2 &lt;- rats_folds2 %&gt;% mutate(model = map(train, ~ lm(longitude ~ ., data = .)))
-
-rats_folds2$model[[1]] %&gt;% summary()</code></pre>
-<p>This is the longitude prediciton</p>
-<pre class="r"><code>library(broom)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;broom&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:modelr&#39;:
-## 
-##     bootstrap</code></pre>
+rats_folds &lt;- crossv_kfold(rat_location, k = 10)
+rats_folds &lt;- rats_folds %&gt;% mutate(model = map(train, ~ lm(rat_per_month ~ ., data = .)))</code></pre>
+<p>We generated predictions using the models fitted during k-fold
+cross-validation.</p>
 <pre class="r"><code>prediction &lt;- 
-  rats_folds2 %&gt;%
+  rats_folds %&gt;%
   mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %&gt;% 
-  unnest(predicted)</code></pre>
-<pre><code>## Warning: There were 10 warnings in `mutate()`.
-## The first warning was:
-## ℹ In argument: `predicted = map2(model, train, ~augment(.x, newdata = .y))`.
-## Caused by warning in `predict.lm()`:
-## ! prediction from a rank-deficient fit may be misleading
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 9 remaining warnings.</code></pre>
-<pre class="r"><code>prediction</code></pre>
-<p>We compare by looking to residual</p>
+  unnest(predicted)
+prediction</code></pre>
+<p>We created a residual plot to visually assess the performance of our
+model.</p>
 <pre class="r"><code>prediction &lt;- prediction %&gt;% 
-  mutate(residual = .fitted - longitude)
+  mutate(residual = .fitted - rat_per_month)
 
 prediction%&gt;%
-  ggplot(aes(longitude, residual)) +
+  ggplot(aes(rat_per_month, residual)) +
     geom_hline(yintercept = 0) +
     geom_point() +
     stat_smooth(method = &quot;loess&quot;) +
     theme_minimal()</code></pre>
-<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
-<p><img src="lm_prediction_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-<p>We compare the R^2 and look at the residuals</p>
+<p><img src="lm_prediction_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <pre class="r"><code>rs &lt;- prediction %&gt;%
   group_by(.id) %&gt;% 
   summarise(
-    sst = sum((longitude - mean(longitude)) ^ 2), # Sum of Squares Total
+    sst = sum((rat_per_month - mean(rat_per_month)) ^ 2), # Sum of Squares Total
     sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
     r.squared = 1 - sse / sst         # Proportion of variance accounted for
     )
@@ -520,47 +490,7 @@ rs %&gt;%
   ggplot(aes(r.squared, fill  = .id)) +
     geom_histogram() +
     geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
-<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
-<p><img src="lm_prediction_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>Same process as above for the latitude</p>
-<pre class="r"><code>library(broom)
-
-prediction2 &lt;- 
-  rats_folds %&gt;%
-  mutate(predicted = map2(model4, train, ~ augment(.x, newdata = .y))) %&gt;% 
-  unnest(predicted)</code></pre>
-<pre><code>## Warning: There were 10 warnings in `mutate()`.
-## The first warning was:
-## ℹ In argument: `predicted = map2(model4, train, ~augment(.x, newdata = .y))`.
-## Caused by warning in `predict.lm()`:
-## ! prediction from a rank-deficient fit may be misleading
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 9 remaining warnings.</code></pre>
-<pre class="r"><code>prediction</code></pre>
-<pre class="r"><code>prediction2 &lt;- prediction2 %&gt;% 
-  mutate(residual = .fitted - latitude)
-
-prediction2%&gt;%
-  ggplot(aes(latitude, residual)) +
-    geom_hline(yintercept = 0) +
-    geom_point() +
-    stat_smooth(method = &quot;loess&quot;) +
-    theme_minimal()</code></pre>
-<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
-<p><img src="lm_prediction_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<pre class="r"><code>rs2 &lt;- prediction2 %&gt;%
-  group_by(.id) %&gt;% 
-  summarise(
-    sst = sum((latitude - mean(latitude)) ^ 2), # Sum of Squares Total
-    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
-    r.squared = 1 - sse / sst         # Proportion of variance accounted for
-    )
-
-rs2 %&gt;% 
-  ggplot(aes(r.squared, fill  = .id)) +
-    geom_histogram() +
-    geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
-<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
-<p><img src="lm_prediction_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="lm_prediction_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 
 
 
