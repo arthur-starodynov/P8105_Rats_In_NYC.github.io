@@ -102,7 +102,7 @@ Important variables to our analysis include:
 
 ## Exploratory Analyses
 
-We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps.
+We first explored how rat sightings vary over time (month, day of the week, year) and how rat sightings vary by borough. To do so, we used simple tables, bar charts, line plots, heat maps, and interactive maps. First, we visualize rat sightings by borough, different measures of time (year, month, and day of the week), and the different types of locations they are found at.
 
 ### Rats Sightings by Bourough
 
