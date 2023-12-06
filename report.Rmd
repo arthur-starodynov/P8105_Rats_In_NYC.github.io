@@ -122,18 +122,18 @@ by_borough <- rats_raw %>%
 by_borough
 ```
 
-```{r, warning=F, message=F}
-rat_monthly <-
+```{r, warning = F, message=FALSE}
+rat_monthly_borough <-
 rats_weekend %>%
-  group_by(sighting_month, sighting_year) %>%
+  group_by(borough, sighting_month, sighting_year) %>%
   mutate(rat_per_month = n()) %>%
   slice(1) %>%
-  select(sighting_month, sighting_year, rat_per_month)
+  select(borough, sighting_month, sighting_year, rat_per_month)
  
-test_bor <- broom::tidy(oneway.test(rat_per_month ~ sighting_month, data = rat_monthly))
+test_bor <- broom::tidy(oneway.test(rat_per_month ~ borough, data = rat_monthly_borough))
 ```
 
-We see that Brooklyn has the highest amount of rats, followed by Manhattan, the Bronx, Queens, and Staten Island. Running a one-way ANOVA test on the number of rat sightings (per month) by borough, we see that the p-value is significant (`r test_bor %>% pull(p.value)`), meaning that at least one of the borough means is not equal to the others.
+We see that Brooklyn has the highest amount of rats, followed by Manhattan, the Bronx, Queens, and Staten Island. Running a one-way ANOVA test on rat sightings (per month and year) against borough, we see that we the p-value is statistically significant (`r test_bor %>% pull(p.value)`), meaning that at least one of the borough means is not equal to the others.
  
 
 ### Rat Sightings by Year
@@ -174,7 +174,18 @@ by_month <- rats_raw %>%
 by_month
 ```
 
-The most rat sightings are in the summer months with a peak in July. Sightings taper off in the fall, reaching a low in December, and then start to increase in the spring. Warmer weather is more favorable to rat survival and helps their populations grow.
+```{r}
+rat_monthly <-
+rats_weekend %>%
+  group_by(sighting_month, sighting_year) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(sighting_month, sighting_year, rat_per_month)
+ 
+test_month <- broom::tidy(oneway.test(rat_per_month ~ sighting_month, data = rat_monthly))
+```
+
+The most rat sightings are in the summer months with a peak in July. Sightings taper off in the fall, reaching a low in December, and then start to increase in the spring. Warmer weather is more favorable to rat survival and helps their populations grow. Running a one-way ANOVA test on the number of rat sightings (per month) by borough, we see that the p-value is statistically significant (`r test_month %>% pull(p.value)`), meaning that at least one of the month's means is not equal to the others.
 
 ### Rat Sightings by Day of the Week
 
