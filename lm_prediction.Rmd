@@ -38,7 +38,16 @@ rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_month_num = month(created_date),
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
-         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) %>%
+  mutate(season = case_when(
+    sighting_month_num %in% c("12", "1", "2") ~ "Winter",
+    sighting_month_num %in% c("3", "4", "5") ~ "Spring",
+    sighting_month_num %in% c("6", "7", "8") ~ "Summer",
+    sighting_month_num %in% c("9", "10", "11") ~ "Fall",
+    TRUE ~ "Unknown"  # Catch-all for unexpected values
+  )) %>%
+  mutate(season = as.factor(season))
+
 ```
 
 We did further literature research and found 3 variables that we thought would be useful in predicting the number of rats per month. 
@@ -47,17 +56,17 @@ We did further literature research and found 3 variables that we thought would b
 rat_location <-
 rats_raw %>%
   filter(location_type %in% c("3+ Family Apt. Building", "1-2 Family Dwelling", "3+ Family Mixed Use Building", "Commercial Building", "Vacant Lot", "Construction Site")) %>%
-  group_by(location_type, sighting_month_num, sighting_year) %>%
+  group_by(location_type, sighting_month_num, sighting_year, season) %>%
   mutate(rat_per_month = n()) %>%
   slice(1) %>%
-  select(location_type, sighting_month_num, sighting_year, rat_per_month) %>% 
-  mutate(sighting_month_num = as.factor(sighting_month_num))
+  select(location_type, sighting_month_num, sighting_year, rat_per_month, season) %>% 
+  mutate(sighting_month_num = as.numeric(sighting_month_num))
 ```
 
 We built a model that predicts rats per month from sighting year, sighting month, and location type. 
 
 ```{r, results = FALSE}
-model <- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type, data = rat_location)
+model <- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type + season, data = rat_location)
 summary(model)
 ```
 
@@ -107,5 +116,25 @@ rs %>%
   ggplot(aes(r.squared, fill  = .id)) +
     geom_histogram() +
     geom_vline(aes(xintercept = mean(r.squared)))
+
+```
+
+```{r}
+rat_stepwise <-
+rats_raw %>%
+  filter(location_type %in% c("3+ Family Apt. Building", "1-2 Family Dwelling", "3+ Family Mixed Use Building", "Commercial Building", "Vacant Lot", "Construction Site")) %>%
+  group_by(location_type, sighting_month_num, sighting_year, borough, season) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(location_type, sighting_month_num, sighting_year, borough, rat_per_month, season) %>% 
+  mutate(sighting_month_num = as.numeric(sighting_month_num))
+
+```
+
+```{r}
+model_step = lm(rat_per_month ~ location_type + sighting_month_num + sighting_year + borough, data = rat_stepwise)
+stepcount <- MASS::stepAIC(model_step, direction = "both", trace = FALSE) %>% broom::tidy()
+knitr::kable(stepcount, digits = 3)
+```
 
 ```

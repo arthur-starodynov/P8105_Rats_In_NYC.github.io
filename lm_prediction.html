@@ -355,6 +355,9 @@ div.tocify {
       <a href="data.html">Data Sources</a>
     </li>
     <li>
+      <a href="heatmap.html">Interactive Data</a>
+    </li>
+    <li>
       <a href="dataviz.html">Exploratory Analysis</a>
     </li>
     <li>
@@ -362,9 +365,6 @@ div.tocify {
     </li>
     <li class="dropdown-header">Results Summary</li>
   </ul>
-</li>
-<li>
-  <a href="heatmap.html">Interactive</a>
 </li>
 <li>
   <a href="mailto:&lt;eih2108@cumc.columbia.edu; lel2176@cumc.columbia.edu; yl5503@cumc.columbia.edu; as7123@cumc.columbia.edu&gt;">
@@ -438,20 +438,28 @@ rats_raw &lt;- read.csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &q
          sighting_month_num = month(created_date),
          sighting_month = month(created_date, label = TRUE, abbr = FALSE),
          sighting_day = day(created_date),
-         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) </code></pre>
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) %&gt;%
+  mutate(season = case_when(
+    sighting_month_num %in% c(&quot;12&quot;, &quot;1&quot;, &quot;2&quot;) ~ &quot;Winter&quot;,
+    sighting_month_num %in% c(&quot;3&quot;, &quot;4&quot;, &quot;5&quot;) ~ &quot;Spring&quot;,
+    sighting_month_num %in% c(&quot;6&quot;, &quot;7&quot;, &quot;8&quot;) ~ &quot;Summer&quot;,
+    sighting_month_num %in% c(&quot;9&quot;, &quot;10&quot;, &quot;11&quot;) ~ &quot;Fall&quot;,
+    TRUE ~ &quot;Unknown&quot;  # Catch-all for unexpected values
+  )) %&gt;%
+  mutate(season = as.factor(season))</code></pre>
 <p>We did further literature research and found 3 variables that we
 thought would be useful in predicting the number of rats per month.</p>
 <pre class="r"><code>rat_location &lt;-
 rats_raw %&gt;%
   filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
-  group_by(location_type, sighting_month_num, sighting_year) %&gt;%
+  group_by(location_type, sighting_month_num, sighting_year, season) %&gt;%
   mutate(rat_per_month = n()) %&gt;%
   slice(1) %&gt;%
-  select(location_type, sighting_month_num, sighting_year, rat_per_month) %&gt;% 
-  mutate(sighting_month_num = as.factor(sighting_month_num))</code></pre>
+  select(location_type, sighting_month_num, sighting_year, rat_per_month, season) %&gt;% 
+  mutate(sighting_month_num = as.numeric(sighting_month_num))</code></pre>
 <p>We built a model that predicts rats per month from sighting year,
 sighting month, and location type.</p>
-<pre class="r"><code>model &lt;- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type, data = rat_location)
+<pre class="r"><code>model &lt;- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type + season, data = rat_location)
 summary(model)</code></pre>
 <p>We then ran a k-fold cross-validation technique to create training
 and testing data sets and ran a new linear regression model for each of
@@ -491,6 +499,245 @@ rs %&gt;%
     geom_histogram() +
     geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
 <p><img src="lm_prediction_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>rat_stepwise &lt;-
+rats_raw %&gt;%
+  filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
+  group_by(location_type, sighting_month_num, sighting_year, borough, season) %&gt;%
+  mutate(rat_per_month = n()) %&gt;%
+  slice(1) %&gt;%
+  select(location_type, sighting_month_num, sighting_year, borough, rat_per_month, season) %&gt;% 
+  mutate(sighting_month_num = as.numeric(sighting_month_num))</code></pre>
+<pre class="r"><code>model_step = lm(rat_per_month ~ location_type + sighting_month_num + sighting_year + borough, data = rat_stepwise)
+stepcount &lt;- MASS::stepAIC(model_step, direction = &quot;both&quot;, trace = FALSE) %&gt;% broom::tidy()
+knitr::kable(stepcount, digits = 3)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+std.error
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+-5463.796
+</td>
+<td style="text-align:right;">
+299.626
+</td>
+<td style="text-align:right;">
+-18.235
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+location_type3+ Family Apt. Building
+</td>
+<td style="text-align:right;">
+63.336
+</td>
+<td style="text-align:right;">
+2.001
+</td>
+<td style="text-align:right;">
+31.652
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+location_type3+ Family Mixed Use Building
+</td>
+<td style="text-align:right;">
+-35.791
+</td>
+<td style="text-align:right;">
+2.055
+</td>
+<td style="text-align:right;">
+-17.417
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+location_typeCommercial Building
+</td>
+<td style="text-align:right;">
+-37.363
+</td>
+<td style="text-align:right;">
+2.006
+</td>
+<td style="text-align:right;">
+-18.625
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+location_typeConstruction Site
+</td>
+<td style="text-align:right;">
+-49.050
+</td>
+<td style="text-align:right;">
+2.116
+</td>
+<td style="text-align:right;">
+-23.186
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+location_typeVacant Lot
+</td>
+<td style="text-align:right;">
+-45.380
+</td>
+<td style="text-align:right;">
+2.027
+</td>
+<td style="text-align:right;">
+-22.391
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sighting_month_num
+</td>
+<td style="text-align:right;">
+0.295
+</td>
+<td style="text-align:right;">
+0.176
+</td>
+<td style="text-align:right;">
+1.679
+</td>
+<td style="text-align:right;">
+0.093
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sighting_year
+</td>
+<td style="text-align:right;">
+2.735
+</td>
+<td style="text-align:right;">
+0.149
+</td>
+<td style="text-align:right;">
+18.408
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+boroughBROOKLYN
+</td>
+<td style="text-align:right;">
+29.324
+</td>
+<td style="text-align:right;">
+1.853
+</td>
+<td style="text-align:right;">
+15.823
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+boroughMANHATTAN
+</td>
+<td style="text-align:right;">
+8.793
+</td>
+<td style="text-align:right;">
+1.857
+</td>
+<td style="text-align:right;">
+4.736
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+boroughQUEENS
+</td>
+<td style="text-align:right;">
+-9.486
+</td>
+<td style="text-align:right;">
+1.866
+</td>
+<td style="text-align:right;">
+-5.083
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+boroughSTATEN ISLAND
+</td>
+<td style="text-align:right;">
+-32.452
+</td>
+<td style="text-align:right;">
+1.978
+</td>
+<td style="text-align:right;">
+-16.406
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+</tbody>
+</table>
+<p>```</p>
 
 
 

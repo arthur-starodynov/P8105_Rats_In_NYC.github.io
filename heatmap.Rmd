@@ -1,14 +1,15 @@
 ---
 title: "Interactive Data"
 output: 
-  flexdashboard::flex_dashboard:
-    orientation: columns
-    vertical_layout: fill
-    source: embed
-    theme: simplex
-runtime: shiny
-
+  html_document:
+    toc: true
+    toc_float: true
+    theme: journal
+    code_folding: "hide"
 ---
+<br>
+
+<font size="4" color="black">
 
 ```{r split = FALSE, fig.align = 'default', warning = FALSE, out.width="100%", include = FALSE, message= FALSE}
 library(tidyverse)
@@ -36,16 +37,9 @@ rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified
          sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
 ```
 
-Column {.sidebar}
------------------------------------------------------------------------
+### Overall Heat Map
 
-Welcome to our interactive dashboard. 
-
-
-Row {data-width=700}
------------------------------------------------------------------------
-
-### Overall Sightings Map and Heat Map
+We generated a heat map using the Leaflet library to visualize the geographical distribution of rat sightings based on latitude and longitude. 
 
 ```{r}
 top = 40.917577 # north lat
@@ -72,21 +66,17 @@ nyc = merge(nyc, count, by = "location")
 factpal = colorFactor("blue", nyc$n)
 
 nyc %>%
-leaflet() %>% 
-  addProviderTiles("Esri.NatGeoWorldMap") %>%
-  addCircles(lng = ~longitude, lat = ~latitude)  %>%
-  setView(lng=center_lon, lat=center_lat,zoom = 10) 
-
-nyc %>%
   leaflet() %>%
   addProviderTiles("Esri.NatGeoWorldMap") %>%
   addHeatmap(lng = ~longitude, lat = ~latitude, intensity = ~(nyc$n), blur = 20, max = 0.05, radius = 15) %>%
   setView(lng=center_lon, lat=center_lat,zoom = 10)
 ```
 
-### Time series plot 
+In summary, the heat map visualizes the density of occurrences of rat sightings within NYC. Warmer colors indicate higher density, while cooler colors represent lower density. 
 
-```{r}
+### Overall Time Series Plot 
+
+```{r, message = FALSE}
 overall <- rats_raw %>% 
   group_by(sighting_year, sighting_month_num, sighting_day) %>% 
   summarize(count = n()) %>% 
@@ -101,7 +91,9 @@ hchart(time_series, name = "Rat Sightings") %>%
   hc_legend(enabled = TRUE)
 ```
 
+The time series plot visually represents the trend and pattern of rat sightings in New York City over time. The x-axis  represents the timeline, and the y-axis represents the count of rat sightings on each corresponding date. 
 
+<font>
 
 
 
