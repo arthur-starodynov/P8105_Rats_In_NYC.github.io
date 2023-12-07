@@ -412,8 +412,10 @@ div.tocify {
 
 <p><br></p>
 <p><font size="4" color="black"></p>
-<p>We first loaded the necessary packages to start on building
-regression models and the cleaned rat dataset</p>
+<ol style="list-style-type: decimal">
+<li>We first loaded the necessary packages to start on building
+regression models and the cleaned rat dataset</li>
+</ol>
 <pre class="r"><code>library(tidyverse)
 library(lubridate)
 library(readr) 
@@ -447,58 +449,15 @@ rats_raw &lt;- read.csv(&quot;./Rat_Sightings.csv&quot;, na = c(&quot;&quot;, &q
     TRUE ~ &quot;Unknown&quot;  # Catch-all for unexpected values
   )) %&gt;%
   mutate(season = as.factor(season))</code></pre>
-<p>We did further literature research and found 3 variables that we
-thought would be useful in predicting the number of rats per month.</p>
-<pre class="r"><code>rat_location &lt;-
-rats_raw %&gt;%
-  filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
-  group_by(location_type, sighting_month_num, sighting_year, season) %&gt;%
-  mutate(rat_per_month = n()) %&gt;%
-  slice(1) %&gt;%
-  select(location_type, sighting_month_num, sighting_year, rat_per_month, season) %&gt;% 
-  mutate(sighting_month_num = as.numeric(sighting_month_num))</code></pre>
-<p>We built a model that predicts rats per month from sighting year,
-sighting month, and location type.</p>
-<pre class="r"><code>model &lt;- lm(rat_per_month ~ sighting_year + sighting_month_num + location_type + season, data = rat_location)
-summary(model)</code></pre>
-<p>We then ran a k-fold cross-validation technique to create training
-and testing data sets and ran a new linear regression model for each of
-the training sets.</p>
-<pre class="r"><code>set.seed(23) 
-rats_folds &lt;- crossv_kfold(rat_location, k = 10)
-rats_folds &lt;- rats_folds %&gt;% mutate(model = map(train, ~ lm(rat_per_month ~ ., data = .)))</code></pre>
-<p>We generated predictions using the models fitted during k-fold
-cross-validation.</p>
-<pre class="r"><code>prediction &lt;- 
-  rats_folds %&gt;%
-  mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %&gt;% 
-  unnest(predicted)
-prediction</code></pre>
-<p>We created a residual plot to visually assess the performance of our
-model.</p>
-<pre class="r"><code>prediction &lt;- prediction %&gt;% 
-  mutate(residual = .fitted - rat_per_month)
-
-prediction%&gt;%
-  ggplot(aes(rat_per_month, residual)) +
-    geom_hline(yintercept = 0) +
-    geom_point() +
-    stat_smooth(method = &quot;loess&quot;) +
-    theme_minimal()</code></pre>
-<p><img src="lm_prediction_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<pre class="r"><code>rs &lt;- prediction %&gt;%
-  group_by(.id) %&gt;% 
-  summarise(
-    sst = sum((rat_per_month - mean(rat_per_month)) ^ 2), # Sum of Squares Total
-    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
-    r.squared = 1 - sse / sst         # Proportion of variance accounted for
-    )
-
-rs %&gt;% 
-  ggplot(aes(r.squared, fill  = .id)) +
-    geom_histogram() +
-    geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
-<p><img src="lm_prediction_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<ol start="2" style="list-style-type: decimal">
+<li>In order to assess whether <code>location_type</code>,
+<code>sighting_year</code>, <code>borough</code> and <code>season</code>
+are significant predictors of rats per month
+(<code>rat_per_month</code>), we utilized a stepwise selection
+algorithm. We used <code>stepAIC</code> command from the
+<code>MASS</code> package to perform a stepwise model selection by
+optimizing AIC.</li>
+</ol>
 <pre class="r"><code>rat_stepwise &lt;-
 rats_raw %&gt;%
   filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
@@ -507,7 +466,7 @@ rats_raw %&gt;%
   slice(1) %&gt;%
   select(location_type, sighting_month_num, sighting_year, borough, rat_per_month, season) %&gt;% 
   mutate(sighting_month_num = as.numeric(sighting_month_num))</code></pre>
-<pre class="r"><code>model_step = lm(rat_per_month ~ location_type + sighting_month_num + sighting_year + borough, data = rat_stepwise)
+<pre class="r"><code>model_step = lm(rat_per_month ~ location_type + sighting_year + borough + season, data = rat_stepwise)
 stepcount &lt;- MASS::stepAIC(model_step, direction = &quot;both&quot;, trace = FALSE) %&gt;% broom::tidy()
 knitr::kable(stepcount, digits = 3)</code></pre>
 <table>
@@ -536,13 +495,13 @@ p.value
 (Intercept)
 </td>
 <td style="text-align:right;">
--5463.796
+-5462.885
 </td>
 <td style="text-align:right;">
-299.626
+293.531
 </td>
 <td style="text-align:right;">
--18.235
+-18.611
 </td>
 <td style="text-align:right;">
 0.000
@@ -553,13 +512,13 @@ p.value
 location_type3+ Family Apt. Building
 </td>
 <td style="text-align:right;">
-63.336
+63.280
 </td>
 <td style="text-align:right;">
-2.001
+1.961
 </td>
 <td style="text-align:right;">
-31.652
+32.276
 </td>
 <td style="text-align:right;">
 0.000
@@ -570,13 +529,13 @@ location_type3+ Family Apt. Building
 location_type3+ Family Mixed Use Building
 </td>
 <td style="text-align:right;">
--35.791
+-35.985
 </td>
 <td style="text-align:right;">
-2.055
+2.013
 </td>
 <td style="text-align:right;">
--17.417
+-17.873
 </td>
 <td style="text-align:right;">
 0.000
@@ -587,13 +546,13 @@ location_type3+ Family Mixed Use Building
 location_typeCommercial Building
 </td>
 <td style="text-align:right;">
--37.363
+-37.452
 </td>
 <td style="text-align:right;">
-2.006
+1.966
 </td>
 <td style="text-align:right;">
--18.625
+-19.054
 </td>
 <td style="text-align:right;">
 0.000
@@ -604,13 +563,13 @@ location_typeCommercial Building
 location_typeConstruction Site
 </td>
 <td style="text-align:right;">
--49.050
+-49.862
 </td>
 <td style="text-align:right;">
-2.116
+2.073
 </td>
 <td style="text-align:right;">
--23.186
+-24.047
 </td>
 <td style="text-align:right;">
 0.000
@@ -621,33 +580,16 @@ location_typeConstruction Site
 location_typeVacant Lot
 </td>
 <td style="text-align:right;">
--45.380
+-45.851
 </td>
 <td style="text-align:right;">
-2.027
+1.986
 </td>
 <td style="text-align:right;">
--22.391
+-23.087
 </td>
 <td style="text-align:right;">
 0.000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sighting_month_num
-</td>
-<td style="text-align:right;">
-0.295
-</td>
-<td style="text-align:right;">
-0.176
-</td>
-<td style="text-align:right;">
-1.679
-</td>
-<td style="text-align:right;">
-0.093
 </td>
 </tr>
 <tr>
@@ -658,10 +600,10 @@ sighting_year
 2.735
 </td>
 <td style="text-align:right;">
-0.149
+0.146
 </td>
 <td style="text-align:right;">
-18.408
+18.790
 </td>
 <td style="text-align:right;">
 0.000
@@ -672,13 +614,13 @@ sighting_year
 boroughBROOKLYN
 </td>
 <td style="text-align:right;">
-29.324
+29.594
 </td>
 <td style="text-align:right;">
-1.853
+1.816
 </td>
 <td style="text-align:right;">
-15.823
+16.298
 </td>
 <td style="text-align:right;">
 0.000
@@ -689,13 +631,13 @@ boroughBROOKLYN
 boroughMANHATTAN
 </td>
 <td style="text-align:right;">
-8.793
+9.007
 </td>
 <td style="text-align:right;">
-1.857
+1.819
 </td>
 <td style="text-align:right;">
-4.736
+4.951
 </td>
 <td style="text-align:right;">
 0.000
@@ -706,13 +648,13 @@ boroughMANHATTAN
 boroughQUEENS
 </td>
 <td style="text-align:right;">
--9.486
+-9.482
 </td>
 <td style="text-align:right;">
-1.866
+1.828
 </td>
 <td style="text-align:right;">
--5.083
+-5.186
 </td>
 <td style="text-align:right;">
 0.000
@@ -723,13 +665,64 @@ boroughQUEENS
 boroughSTATEN ISLAND
 </td>
 <td style="text-align:right;">
--32.452
+-33.025
 </td>
 <td style="text-align:right;">
-1.978
+1.939
 </td>
 <td style="text-align:right;">
--16.406
+-17.036
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+seasonSpring
+</td>
+<td style="text-align:right;">
+2.597
+</td>
+<td style="text-align:right;">
+1.640
+</td>
+<td style="text-align:right;">
+1.584
+</td>
+<td style="text-align:right;">
+0.113
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+seasonSummer
+</td>
+<td style="text-align:right;">
+11.766
+</td>
+<td style="text-align:right;">
+1.630
+</td>
+<td style="text-align:right;">
+7.219
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+seasonWinter
+</td>
+<td style="text-align:right;">
+-11.602
+</td>
+<td style="text-align:right;">
+1.675
+</td>
+<td style="text-align:right;">
+-6.925
 </td>
 <td style="text-align:right;">
 0.000
@@ -737,6 +730,106 @@ boroughSTATEN ISLAND
 </tr>
 </tbody>
 </table>
+<ol start="2" style="list-style-type: decimal">
+<li>We found 4 variables that we thought would be useful in predicting
+the number of rats per month: <code>location_type</code>,
+<code>sighting_year</code>, <code>borough</code> and
+<code>season</code>.</li>
+</ol>
+<pre class="r"><code>rat_location &lt;-
+rats_raw %&gt;%
+  filter(location_type %in% c(&quot;3+ Family Apt. Building&quot;, &quot;1-2 Family Dwelling&quot;, &quot;3+ Family Mixed Use Building&quot;, &quot;Commercial Building&quot;, &quot;Vacant Lot&quot;, &quot;Construction Site&quot;)) %&gt;%
+  group_by(location_type, borough , sighting_year, season) %&gt;%
+  mutate(rat_per_month = n()) %&gt;%
+  slice(1) %&gt;%
+  select(location_type, borough, sighting_year, rat_per_month, season) </code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>We built a model that predicts rats per month
+(<code>rat_per_month</code>) from <code>location_type</code>,
+<code>sighting_month_num</code>, <code>sighting_year</code>, and
+<code>season</code>.</li>
+</ol>
+<pre class="r"><code>model &lt;- lm(rat_per_month ~ sighting_year + borough + location_type + season, data = rat_location)
+summary(model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = rat_per_month ~ sighting_year + borough + location_type + 
+##     season, data = rat_location)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -307.24  -49.50   -4.39   43.20  893.99 
+## 
+## Coefficients:
+##                                             Estimate Std. Error t value
+## (Intercept)                               -1.505e+04  1.393e+03 -10.806
+## sighting_year                              7.541e+00  6.908e-01  10.917
+## boroughBROOKLYN                            8.800e+01  8.772e+00  10.031
+## boroughMANHATTAN                           2.635e+01  8.772e+00   3.004
+## boroughQUEENS                             -2.701e+01  8.779e+00  -3.076
+## boroughSTATEN ISLAND                      -8.832e+01  8.895e+00  -9.929
+## location_type3+ Family Apt. Building       1.864e+02  9.558e+00  19.499
+## location_type3+ Family Mixed Use Building -1.030e+02  9.629e+00 -10.693
+## location_typeCommercial Building          -1.096e+02  9.558e+00 -11.471
+## location_typeConstruction Site            -1.401e+02  9.704e+00 -14.434
+## location_typeVacant Lot                   -1.344e+02  9.575e+00 -14.035
+## seasonSpring                               7.561e+00  7.861e+00   0.962
+## seasonSummer                               3.429e+01  7.842e+00   4.372
+## seasonWinter                              -3.393e+01  7.909e+00  -4.291
+##                                           Pr(&gt;|t|)    
+## (Intercept)                                &lt; 2e-16 ***
+## sighting_year                              &lt; 2e-16 ***
+## boroughBROOKLYN                            &lt; 2e-16 ***
+## boroughMANHATTAN                           0.00271 ** 
+## boroughQUEENS                              0.00213 ** 
+## boroughSTATEN ISLAND                       &lt; 2e-16 ***
+## location_type3+ Family Apt. Building       &lt; 2e-16 ***
+## location_type3+ Family Mixed Use Building  &lt; 2e-16 ***
+## location_typeCommercial Building           &lt; 2e-16 ***
+## location_typeConstruction Site             &lt; 2e-16 ***
+## location_typeVacant Lot                    &lt; 2e-16 ***
+## seasonSpring                               0.33627    
+## seasonSummer                              1.31e-05 ***
+## seasonWinter                              1.89e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 113.1 on 1640 degrees of freedom
+##   (9 observations deleted due to missingness)
+## Multiple R-squared:  0.5871, Adjusted R-squared:  0.5838 
+## F-statistic: 179.4 on 13 and 1640 DF,  p-value: &lt; 2.2e-16</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>We then ran a k-fold cross-validation technique to create training
+and testing data sets and ran a new linear regression model for each of
+the training sets.</li>
+</ol>
+<pre class="r"><code>set.seed(23) 
+rats_folds &lt;- crossv_kfold(rat_location, k = 10)
+rats_folds &lt;- rats_folds %&gt;% mutate(model = map(train, ~ lm(rat_per_month ~ ., data = .)))</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>We generated predictions using the models fitted during k-fold
+cross-validation.</li>
+</ol>
+<pre class="r"><code>prediction &lt;- 
+  rats_folds %&gt;%
+  mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %&gt;% 
+  unnest(predicted)</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>We created a residual plot to visually assess the performance of our
+model.</li>
+</ol>
+<pre class="r"><code>prediction &lt;- prediction %&gt;% 
+  mutate(residual = .fitted - rat_per_month)
+
+prediction%&gt;%
+  ggplot(aes(rat_per_month, residual)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    stat_smooth(method = &quot;loess&quot;) +
+    theme_minimal() +
+    coord_cartesian(xlim = c(0, 500))</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="lm_prediction_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>```</p>
 
 
