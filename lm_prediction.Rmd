@@ -121,7 +121,4 @@ prediction%>%
     coord_cartesian(xlim = c(0, 500))
 ```
 
-
-
-
-```
+We then produced linear regression prediction a second time, but instead to predict the number of rats per month based off the analysis that we conducted earlier in the report. Reviewing the graph of rat_per_month vs. the residual data, we see that the data points are more evenly spread out and the regression line is better fit to the data. The variables chosen were not heavily correlated with each other giving us a more accurate representation of the actual data. We found an adjusted R^2 value of 0.5838. This lower R^2 value means that less of the variability is explained by the model, but it is a more realistic depiction of our dataset. 
