@@ -494,8 +494,8 @@ rats_folds2$model[[1]] %&gt;% summary()</code></pre>
 ##   ~augment(.x, newdata = .y))`.
 ## Caused by warning in `predict.lm()`:
 ## ! prediction from rank-deficient fit; attr(*, &quot;non-estim&quot;) has doubtful cases
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 9
-##   remaining warnings.</code></pre>
+## ℹ Run `dplyr::last_dplyr_warnings()` to see the
+##   9 remaining warnings.</code></pre>
 <pre class="r"><code>prediction</code></pre>
 <p>We compare by looking to residual</p>
 <pre class="r"><code>prediction &lt;- prediction %&gt;% 
@@ -522,8 +522,8 @@ rs %&gt;%
   ggplot(aes(r.squared, fill  = .id)) +
     geom_histogram() +
     geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
-<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with
-## `binwidth`.</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better
+## value with `binwidth`.</code></pre>
 <p><img src="lm_prediction_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>Same process as above for the latitude</p>
 <pre class="r"><code>library(broom)
@@ -538,8 +538,8 @@ prediction2 &lt;-
 ##   ~augment(.x, newdata = .y))`.
 ## Caused by warning in `predict.lm()`:
 ## ! prediction from rank-deficient fit; attr(*, &quot;non-estim&quot;) has doubtful cases
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 9
-##   remaining warnings.</code></pre>
+## ℹ Run `dplyr::last_dplyr_warnings()` to see the
+##   9 remaining warnings.</code></pre>
 <pre class="r"><code>prediction</code></pre>
 <pre class="r"><code>prediction2 &lt;- prediction2 %&gt;% 
   mutate(residual = .fitted - latitude)
@@ -564,8 +564,8 @@ rs2 %&gt;%
   ggplot(aes(r.squared, fill  = .id)) +
     geom_histogram() +
     geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
-<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with
-## `binwidth`.</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better
+## value with `binwidth`.</code></pre>
 <p><img src="lm_prediction_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 
 
