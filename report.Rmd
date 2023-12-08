@@ -32,7 +32,7 @@ We set out to answer the following questions:
 
 - How do rat sightings vary over time (month, day of the week, year)
 - How do rat sightings vary by borough and where are they concentrated?
-- What are the important factors in predicting a rat sighting location?
+- What are the important factors in predicting a rat sighting?
 
 Throughout the course of working on the project, we became interested in sightings year-over-year and included some time series plots in the analysis.
 
@@ -134,7 +134,7 @@ rats_raw %>%
 test_borough <- broom::tidy(oneway.test(rat_per_month ~ borough, data = rat_borough))
 ```
 
-We see that Brooklyn has the highest amount of rats, followed by Manhattan, the Bronx, Queens, and Staten Island. Running a one-way ANOVA test on the number of rat sightings (per month/year) by borough, we see that the p-value is `r test_borough %>% pull(p.value)` and at least one of the borough means is not equal to the others.
+We see that Brooklyn has the highest amount of rats, followed by Manhattan, the Bronx, Queens, and Staten Island. Running a one-way ANOVA test on the number of monthly rat sightings by borough, we see that the p-value is `r test_borough %>% pull(p.value)` and at least one of the borough means is not equal to the others.
 
 
 
@@ -167,7 +167,7 @@ rats_raw %>%
 test_year <- broom::tidy(oneway.test(rat_per_month ~ sighting_year, data = rat_year))
 ```
 
-We see a substantial increase in the number of rat sightings after 2020. This increase is consistent with the city of New York's rat media coverage and the impact of the COVID-19 pandemic. With more restaurants closed and more restaurants offering outdoor dining, rats are more likely to scavenge outside. A warmer, wetter than usual summer in 2021 also contributed to favorable rat conditions. Running a one-way ANOVA test on the number of rat sightings (per month) by year, we see that the p-value is `r test_year %>% pull(p.value)` so at least one of the borough means is not equal to the others. 
+We see a substantial increase in the number of rat sightings after 2020. This increase is consistent with the city of New York's rat media coverage and the impact of the COVID-19 pandemic. With more restaurants closed and more restaurants offering outdoor dining, rats are more likely to scavenge outside. A warmer, wetter than usual summer in 2021 also contributed to favorable rat conditions. Running a one-way ANOVA test on the number of monthly rat sightings by year, we see that the p-value is `r test_year %>% pull(p.value)` so at least one of the borough means is not equal to the others. 
 
 
 ### Rat Sightings by Month
@@ -270,9 +270,14 @@ test_location <- broom::tidy(oneway.test(rat_per_month ~ location_type, data = r
 The above shows the top 6 location types for rat sightings. 3+ Family Apt. Buildings report the highest amount of rat sightings among all location types, while 1-2 Family Dwellings and 3+ Family Mixed Use Buildings report the next two highest amount of sightings. These location types are followed by commercial buildings, vacant lots, and construction sites. Running an ANOVA for monthly rat sightings against the top 6 location types, there is a p-value of `r test_location %>% pull(p.value)` so at least one of the location type means is not equal to the others. 
 
 
-### Interactive Maps
+### Interactive Plots
 
-In order to display rat sightings across New York City, we opted to create interactive maps. The first shows all rat sightings and their geo-location while the second is a heat map.
+
+In order to display rat sightings across New York City, we opted to create an interactive heat map, showing the hot spots for rat sightings, and a time series plot.
+
+#### Heat Map
+
+Focusing in on Columbia University's Presbyterian Hospital campus at 168th Street, there is a lack of hot spots, but the immediate surrounding areas appear to have fairly normal sightings.
 
 ```{r split = FALSE, fig.align = 'default', warning = FALSE, out.width="100%"}
 ## Overall Sightings Map and Heat Map
@@ -299,18 +304,48 @@ nyc %>%
   addProviderTiles("Esri.NatGeoWorldMap") %>%
   addHeatmap(lng = ~longitude, lat = ~latitude, intensity = ~(nyc$n), blur = 20, max = 0.05, radius = 15) %>%
   setView(lng=center_lon, lat=center_lat,zoom = 10)
+```
 
+
+#### Time series plot 
+
+Over the 13 years of data, rat sightings have increased and display a cyclical pattern each year. Rat sightings drop in the colder months and rise in the warmer months each year. Rat sightings in 2020-2023 appear to have increased 
+
+```{r, warning = F, message = F}
+overall <- rats_raw %>% 
+  group_by(sighting_year, sighting_month_num, sighting_day) %>% 
+  summarize(count = n()) %>% 
+  mutate(date = as.Date(paste(sighting_year, sighting_month_num, sighting_day, sep = "-")))
+
+time_series = xts(overall$count , order.by= overall$date)
+
+hchart(time_series, name = "Rat Sightings") %>% 
+  hc_add_theme(hc_theme_darkunica()) %>%
+  hc_credits(enabled = TRUE, text = "Sources: City of New York", style = list(fontSize = "12px")) %>%
+  hc_title(text = "Time Series of NYC Rat Sightings") %>%
+  hc_legend(enabled = TRUE)
 ```
 
 ## Additional Analyses
 
-Insert modeling 
+### Modeling 1
+Insert
+
+### Modeling 2
+Insert
+
 
 ## Discussion
 
-Insert discussion
+Our project aimed to investigate the factors that contribute to rat sightings in New York City. We were interested in how rat sightings vary by different measures of time, borough, location type and what variables are most important. 
 
-- pandemic --> restaurants closed, rats scavenging outside so more sightings. Outdoor dining.
-- warmer, wetter summer than usual helps rat populations
+To investigate the impact of these variables, we created a series of exploratory plots that displaying the relationship between rat sightings and year, month, day of the week, borough, and location type. We followed each up with an ANOVA test to test the relationship between monthly rat sightings and each group; all were statistically significant. We learned that rat sightings have increased year-to-year, with large increases since 2020. This is likely due to more rats scavenging outside due to pandemic-induced restaurant closures and summers becoming significantly warmer and wetter than summers in prior years. We also learned that Brooklyn has the most rat sightings of all boroughs and apartment buildings with 3 or more units have the most rat sightings of all location types. 
+
+In addition to our data visualizations, we conducted linear models predicting latitude and longitude & rat sightings per month. We found 4 predictors that are helpful in predicting monthly rat sightings (`location_type`, `sighting_year`, `borough`, and `season`), with coefficients in the expected directions according to our exploratory plots. 
+
+Through this analysis, we now understand some of the factors that influence the amount and location of rat sightings in New York City. It became clear that there's no avoiding our furry neighbors.
 
 <font>
+
+
+
