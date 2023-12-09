@@ -175,7 +175,7 @@ rs %>%
 ```
 
 
-Once again we want to see how accurate our model is so we run R^2 value and notice they are all around 0.9915 standard. A note about running this model is that we do not have an accurate adjusted R^2 value provided due to most likely overfitting of the data set. 
+Once again we want to see how accurate our model is so we run R^2 value and notice they are all around 0.9915 standard dependent on the random samples chosen from the data set. A note about running this model is that we do not have an accurate adjusted R^2 value provided due to most likely overfitting of the data set. 
 
 
 
@@ -230,7 +230,7 @@ rs2 %>%
 ```
 
 
-We notice that our R^2 value is higher with the latitude plot being around 0.9972 again needing to be adjusted based on overfitting. 
+We notice that our R^2 value is higher with the latitude plot being around 0.9972 again needing to be adjusted based on overfitting all dependent on the random samples chosen from the data set. 
 
 
 

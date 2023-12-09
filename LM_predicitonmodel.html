@@ -513,9 +513,10 @@ rs %&gt;%
     geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
 <p><img src="LM_predicitonmodel_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>Once again we want to see how accurate our model is so we run R^2
-value and notice they are all around 0.9915 standard. A note about
-running this model is that we do not have an accurate adjusted R^2 value
-provided due to most likely overfitting of the data set.</p>
+value and notice they are all around 0.9915 standard dependent on the
+random samples chosen from the data set. A note about running this model
+is that we do not have an accurate adjusted R^2 value provided due to
+most likely overfitting of the data set.</p>
 <ol start="5" style="list-style-type: decimal">
 <li>Now we repeat the process on the Latitude data</li>
 </ol>
@@ -554,7 +555,8 @@ rs2 %&gt;%
     geom_vline(aes(xintercept = mean(r.squared)))</code></pre>
 <p><img src="LM_predicitonmodel_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>We notice that our R^2 value is higher with the latitude plot being
-around 0.9972 again needing to be adjusted based on overfitting.</p>
+around 0.9972 again needing to be adjusted based on overfitting all
+dependent on the random samples chosen from the data set.</p>
 <p>Overall this data does make sense as it lands us in New York City
 (Manhattan) when we plot the Expected values onto a latitude and
 longitude map.</p>
