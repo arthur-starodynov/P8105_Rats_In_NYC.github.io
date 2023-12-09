@@ -304,13 +304,354 @@ nyc %>%
 
 ## Additional Analyses
 
-Insert modeling 
+We first loaded the necessary packages to start on building regression models and the cleaned rat dataset 
+
+```{r, message = FALSE}
+library(tidyverse)
+library(lubridate)
+library(readr) 
+library("ggplot2") 
+library("dplyr")
+library(xts)
+library("lubridate")
+library("RColorBrewer")
+library("ggthemes")
+library("gridExtra")
+library("leaflet")
+library("highcharter")
+library(scales)
+library(leaflet.extras)
+library(modelr)
+library(broom)
+
+rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
+  janitor::clean_names() %>% 
+  mutate(created_date = mdy_hms(created_date)) %>%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) %>%
+  mutate(season = case_when(
+    sighting_month_num %in% c("12", "1", "2") ~ "Winter",
+    sighting_month_num %in% c("3", "4", "5") ~ "Spring",
+    sighting_month_num %in% c("6", "7", "8") ~ "Summer",
+    sighting_month_num %in% c("9", "10", "11") ~ "Fall",
+    TRUE ~ "Unknown"  # Catch-all for unexpected values
+  )) %>%
+  mutate(season = as.factor(season))
+
+```
+
+### AIC Optimization
+
+In order to assess whether `location_type`, `sighting_year`, `borough` and `season` are significant predictors of rats per month (`rat_per_month`), we utilized a stepwise selection algorithm. We used `stepAIC` command from the `MASS` package to perform a stepwise model selection by optimizing AIC. 
+
+```{r}
+rat_stepwise <-
+rats_raw %>%
+  filter(location_type %in% c("3+ Family Apt. Building", "1-2 Family Dwelling", "3+ Family Mixed Use Building", "Commercial Building", "Vacant Lot", "Construction Site")) %>%
+  group_by(location_type, sighting_month_num, sighting_year, borough, season) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(location_type, sighting_month_num, sighting_year, borough, rat_per_month, season) %>% 
+  mutate(sighting_month_num = as.numeric(sighting_month_num))
+
+```
+
+```{r}
+model_step = lm(rat_per_month ~ location_type + sighting_year + borough + season, data = rat_stepwise)
+stepcount <- MASS::stepAIC(model_step, direction = "both", trace = FALSE) %>% broom::tidy()
+knitr::kable(stepcount, digits = 3)
+```
+
+We found 4 variables that we thought would be useful in predicting the number of rats per month: `location_type`, `sighting_year`, `borough` and `season`. 
+
+```{r, results= FALSE}
+rat_location <-
+rats_raw %>%
+  filter(location_type %in% c("3+ Family Apt. Building", "1-2 Family Dwelling", "3+ Family Mixed Use Building", "Commercial Building", "Vacant Lot", "Construction Site")) %>%
+  group_by(location_type, borough , sighting_year, season) %>%
+  mutate(rat_per_month = n()) %>%
+  slice(1) %>%
+  select(location_type, borough, sighting_year, rat_per_month, season) 
+```
+
+We built a model that predicts rats per month (`rat_per_month`) from `location_type`, `sighting_month_num`, `sighting_year`, and `season`. 
+
+```{r}
+model <- lm(rat_per_month ~ sighting_year + borough + location_type + season, data = rat_location)
+summary(model)
+```
+
+### K-Fold Cross-Validation
+We then ran a k-fold cross-validation technique to create training and testing data sets and ran a new linear regression model for each of the training sets.
+
+```{r, results = FALSE}
+set.seed(23) 
+rats_folds <- crossv_kfold(rat_location, k = 10)
+rats_folds <- rats_folds %>% mutate(model = map(train, ~ lm(rat_per_month ~ ., data = .)))
+```
+
+We generated predictions using the models fitted during k-fold cross-validation. 
+
+```{r, results = FALSE}
+prediction <- 
+  rats_folds %>%
+  mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %>% 
+  unnest(predicted)
+```
+
+### Residuals Plot
+
+We created a residual plot to visually assess the performance of our model.
+
+```{r, warning = FALSE, message = FALSE}
+prediction <- prediction %>% 
+  mutate(residual = .fitted - rat_per_month)
+
+prediction%>%
+  ggplot(aes(rat_per_month, residual)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    stat_smooth(method = "loess") +
+    theme_minimal() +
+    coord_cartesian(xlim = c(0, 500))
+```
+
+We then produced linear regression prediction a second time, but instead to predict the number of rats per month based off the analysis that we conducted earlier in the report. Reviewing the graph of rat_per_month vs. the residual data, we see that the data points are more evenly spread out and the regression line is better fit to the data. The variables chosen were not heavily correlated with each other giving us a more accurate representation of the actual data. We found an adjusted R^2 value of 0.5838. This lower R^2 value means that less of the variability is explained by the model, but it is a more realistic depiction of our dataset. 
+
+
+## Predictive Regression Modeling
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(readr) 
+library("ggplot2") 
+library("dplyr")
+library(xts)
+library("lubridate")
+library("RColorBrewer")
+library("ggthemes")
+library("gridExtra")
+library("leaflet")
+library("highcharter")
+library(scales)
+library(leaflet.extras)
+library(modelr)
+rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
+  janitor::clean_names() %>% 
+  mutate(created_date = mdy_hms(created_date)) %>%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+```
+
+We first clean the data set more on the predictor variables that were googled through research to have the most effect on rat sightings, keeping borough and location type. 
+
+
+```{r, results= FALSE, warning= FALSE, message = FALSE}
+cleaner_rats <- 
+  rats_raw %>%
+  drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %>%
+  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %>%
+  drop_na() %>%
+  janitor::clean_names()
+
+cleaner_rats <- as.data.frame(unclass(cleaner_rats),stringsAsFactors=TRUE)
+cleaner_rats
+sample_1 <- cleaner_rats[sample(nrow(cleaner_rats), 500), ]
+```
+
+We take out cleaned out data set from the previous data cleaning technique and we want to further clean it so that we can use some variety of variables that we need to run our linear model in the future. 
+
+
+```{r, results= FALSE, warning= FALSE, message = FALSE}
+model1 <-  lm(latitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
+model2 <-  lm(longitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
+summary(model1)
+summary(model2)
+
+
+```
+
+### P Value Variable Evaluation
+Here we want to run a simple linear model on all of the variables to see which had the greatest effect on our outcome, the latitude and the longitude. We can quickly see that street_name, borough, location_type, incident zip played the biggest factorss based on their P values. 
+
+
+```{r, results = FALSE, warning=FALSE, message = FALSE}
+set.seed(23) 
+cleaner_rats1 <- 
+  sample_1 %>% 
+  select(location_type, borough,incident_zip, street_name, latitude)
+
+rats_folds <- crossv_kfold(cleaner_rats1, k = 10)
+
+rats_folds <- rats_folds %>% mutate(model4 = map(train, ~ lm(latitude ~ ., data = .)))
+
+rats_folds$model4[[1]] %>% summary()
+
+```
+
+### K-Fold Cross-Validation
+
+From here we run a simple kfold technique to have a training and testing data set. We want to split the data up as much as possible to be able to have our model run through the variations of the data set done through the K fold to be able to more accurately predict latitude and longitude. 
+
+
+
+```{r, results = FALSE, warning=FALSE, message = FALSE}
+set.seed(23) 
+cleaner_rats2 <- 
+  sample_1 %>% 
+  select(location_type, borough, street_name, incident_zip, longitude)
+
+rats_folds2 <- crossv_kfold(cleaner_rats2, k = 10)
+
+rats_folds2 <- rats_folds2 %>% mutate(model = map(train, ~ lm(longitude ~ ., data = .)))
+
+rats_folds2$model[[1]] %>% summary()
+
+```
+
+
+
+```{r, results = FALSE, warning=FALSE, message = FALSE}
+library(broom)
+
+prediction <- 
+  rats_folds2 %>%
+  mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %>% 
+  unnest(predicted)
+prediction
+```
+
+Now we want to run our linear model onto the training data set provided above through the kfold technique and make a prediction that asks where would we expect another rat sighting to occur? Our prediction is bias and may not be as accurate as other methods due to putting factored variables into our model prediciton. 
+
+
+### Longitude Residual Plot 
+
+We compare by looking to residual
+
+```{r, warning= FALSE, message =FALSE}
+prediction <- prediction %>% 
+  mutate(residual = .fitted - longitude)
+
+prediction%>%
+  ggplot(aes(longitude, residual)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    stat_smooth(method = "loess") +
+    theme_minimal()
+
+
+```
+
+
+### R^2 of Longitude Residuals
+
+By looking at the residual values given through our predicition it is clear that we see and can predict another rat sighting to occur around -74.0 - -73.9 degrees longitude. 
+
+
+```{r, warning= FALSE, message =FALSE}
+rs <- prediction %>%
+  group_by(.id) %>% 
+  summarise(
+    sst = sum((longitude - mean(longitude)) ^ 2), # Sum of Squares Total
+    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
+    r.squared = 1 - sse / sst         # Proportion of variance accounted for
+    )
+
+rs %>% 
+  ggplot(aes(r.squared, fill  = .id)) +
+    geom_histogram() +
+    geom_vline(aes(xintercept = mean(r.squared)))
+
+```
+
+
+Once again we want to see how accurate our model is so we run R^2 value and notice they are all around 0.9915 standard dependent on the random samples chosen from the data set. A note about running this model is that we do not have an accurate adjusted R^2 value provided due to most likely overfitting of the data set. 
+
+
+
+
+Now we repeat the process on the Latitude data
+
+```{r, results = FALSE, warning = FALSE,message=FALSE}
+library(broom)
+
+prediction2 <- 
+  rats_folds %>%
+  mutate(predicted = map2(model4, train, ~ augment(.x, newdata = .y))) %>% 
+  unnest(predicted)
+prediction
+```
+
+### Residual Plot of Latitude
+
+
+```{r, warning = FALSE, message=FALSE}
+prediction2 <- prediction2 %>% 
+  mutate(residual = .fitted - latitude)
+
+prediction2%>%
+  ggplot(aes(latitude, residual)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    stat_smooth(method = "loess") +
+    theme_minimal()
+```
+
+Looking at the residual we can predict that the rat might appear again around 40.7 degrees of latitude. 
+
+
+### R^2 of Latitude Residuals
+
+```{r, warning = FALSE,message=FALSE}
+rs2 <- prediction2 %>%
+  group_by(.id) %>% 
+  summarise(
+    sst = sum((latitude - mean(latitude)) ^ 2), # Sum of Squares Total
+    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
+    r.squared = 1 - sse / sst         # Proportion of variance accounted for
+    )
+
+rs2 %>% 
+  ggplot(aes(r.squared, fill  = .id)) +
+    geom_histogram() +
+    geom_vline(aes(xintercept = mean(r.squared)))
+
+
+
+```
+
+
+We notice that our R^2 value is higher with the latitude plot being around 0.9972 again needing to be adjusted based on overfitting all dependent on the random samples chosen from the data set. 
+
+
+
+
+Overall this data does make sense as it lands us in New York City (Manhattan) when we plot the Expected values onto a latitude and longitude map. 
+
+<br> 
+<br>
 
 ## Discussion
+<br>
 
-Insert discussion
+-When analyzing our data, we considered many different factors that could be contributors to varying rat 
+sightings in NYC. 
 
-- pandemic --> restaurants closed, rats scavenging outside so more sightings. Outdoor dining.
-- warmer, wetter summer than usual helps rat populations
+-We believe that the exponential increase in rat sightings at the end of 2020 and going into 2021 could be a result of the pandemic. Since most restaurants and establishments were closed and less people filled the streets during the lock down, the rats were able to scavenge outside without interruptions. They were most likely able to find food, shelter, and reproduce without people and cars scaring them away. This could have led to an increase in the rat population and more rat sightings. The pandemic also led to an increase in outdoor dining, and these dining areas are still being used today. This could explain the continued high number of rat sightings since there is more food scraps and crumbs outside for the rats to find. 
+
+-More rat sightings are also observed during the summer months which can be explained by warmer and wetter weather than the rest of the year. Since the weather is warm, the rats are able to scurry around the streets comfortably instead of having to shelter for warmth and safety. Due to temperature, rats normally have their babies in the spring months which also explains an increase in rat sightings during the summer. 
+
+-We also found that rat sightings are highest during the weekdays (especially towards the beginning) and lowest during the weekend. This can be attributed to people leaving their houses more on the weekdays to go to work, errands, and other obligations, compared to staying in their houses on the weekends. 
+
+- When analyzing rat sightings by location type, we see that rats are seen most in 3+ family apt. buildings. This may be because these types of apartments are usually large buildings that are maintained with comfortable living conditions such as heat/air conditioning, clean environment, kitchens full of food, etc. That sounds like a perfect place for a rat to settle down. The number of rat sightings are followed by 1-2 family dwellings and 3+ family mixed use buildings which can be explained by the same argument as above. The rats are spotted less often in commercial buildings, vacant lots, and constructions sights. This is most likely because these types of locations are not conducive for a rat to survive. There is most likely little to no food available for them and harsh/uncomfortable living conditions. They especially would not want to nest around constructions sites since it is dangerous and sterile. 
+
+Our heat map of rat sightings shows that rats have pretty much taken over the entire city. However, as you zoom in, there are more dense pockets of rat sightings which could be contributed to restaurants or apartment buildings. There does not seem to be one borough that has significantly less rats than the rest.
 
 <font>
