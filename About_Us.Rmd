@@ -23,3 +23,9 @@ library(cropcircles)
 
 # <img src="pictures/trinaaa.png" alt="Avatar" width="300" height="300" > Trina Hofrenning
 
+<br></br>
+
+# <img src="pictures/IMG_0328.jpeg" alt="Avatar" width="300" height="300"> Lauren Lazaro 
+
+
+
