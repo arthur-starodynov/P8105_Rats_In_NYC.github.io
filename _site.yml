@@ -22,6 +22,8 @@ navbar:
         href: dataviz.html      
       - text: "Regression"
         href: lm_prediction.html
+      - text: "Predictive Regression Model"
+        href: LM_predicitonmodel.html
       - text: "Results Summary"
     - icon: fa-envelope fa-lg
       href: mailto:<eih2108@cumc.columbia.edu; lel2176@cumc.columbia.edu; yl5503@cumc.columbia.edu; as7123@cumc.columbia.edu>

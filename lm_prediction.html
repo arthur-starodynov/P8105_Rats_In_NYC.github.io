@@ -363,6 +363,9 @@ div.tocify {
     <li>
       <a href="lm_prediction.html">Regression</a>
     </li>
+    <li>
+      <a href="LM_predicitonmodel.html">Predictive Regression Model</a>
+    </li>
     <li class="dropdown-header">Results Summary</li>
   </ul>
 </li>
@@ -828,7 +831,6 @@ prediction%&gt;%
     stat_smooth(method = &quot;loess&quot;) +
     theme_minimal() +
     coord_cartesian(xlim = c(0, 500))</code></pre>
-<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
 <p><img src="lm_prediction_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>We then produced linear regression prediction a second time, but
 instead to predict the number of rats per month based off the analysis

@@ -1,0 +1,238 @@
+---
+title: "Prediction Modeling"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: journal
+    code_folding: "hide"
+---
+
+
+
+
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(readr) 
+library("ggplot2") 
+library("dplyr")
+library(xts)
+library("lubridate")
+library("RColorBrewer")
+library("ggthemes")
+library("gridExtra")
+library("leaflet")
+library("highcharter")
+library(scales)
+library(leaflet.extras)
+library(modelr)
+rats_raw <- read.csv("./Rat_Sightings.csv", na = c("", "NA", "N/A", "Unspecified")) %>%
+  janitor::clean_names() %>% 
+  mutate(created_date = mdy_hms(created_date)) %>%
+  mutate(sighting_year = year(created_date),
+         sighting_month_num = month(created_date),
+         sighting_month = month(created_date, label = TRUE, abbr = FALSE),
+         sighting_day = day(created_date),
+         sighting_weekday = wday(created_date, label = TRUE, abbr = FALSE)) 
+```
+
+
+
+
+1) Clean data set more on the predictor variables that were googled through research to have the most effect on rat sightings, keeping borough and location type. 
+
+
+
+
+
+
+```{r, results= FALSE, warning= FALSE, message = FALSE}
+cleaner_rats <- 
+  rats_raw %>%
+  drop_na(descriptor, location_type, incident_address, incident_zip,street_name, borough, latitude, longitude) %>%
+  select(unique_key, agency, descriptor, location_type, incident_address, incident_zip, street_name, borough,latitude, longitude) %>%
+  drop_na() %>%
+  janitor::clean_names()
+
+cleaner_rats <- as.data.frame(unclass(cleaner_rats),stringsAsFactors=TRUE)
+cleaner_rats
+sample_1 <- cleaner_rats[sample(nrow(cleaner_rats), 500), ]
+```
+
+2) We take out cleaned out data set from the previous data cleaning technique and we want to further clean it so that we can use some variety of variables that we need to run our linear model in the future. 
+
+
+
+
+
+```{r, results= FALSE, warning= FALSE, message = FALSE}
+model1 <-  lm(latitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
+model2 <-  lm(longitude ~ borough + location_type + incident_zip + street_name, data = sample_1)
+summary(model1)
+summary(model2)
+
+
+```
+
+
+3) Here we want to run a simple linear model on all of the variables to see which had the greatest effect on our outcome, the latitude and the longitude. We can quickly see that street_name, borough, location_type, incident zip played the biggest factorss based on their P values. 
+
+
+
+
+
+
+
+
+
+```{r, results = FALSE, warning=FALSE, message = FALSE}
+set.seed(23) 
+cleaner_rats1 <- 
+  sample_1 %>% 
+  select(location_type, borough,incident_zip, street_name, latitude)
+
+rats_folds <- crossv_kfold(cleaner_rats1, k = 10)
+
+rats_folds <- rats_folds %>% mutate(model4 = map(train, ~ lm(latitude ~ ., data = .)))
+
+rats_folds$model4[[1]] %>% summary()
+
+```
+
+
+4) From here we run a simple kfold technique to have a training and testing data set. We want to split the data up as much as possible to be able to have our model run through the variations of the data set done through the K fold to be able to more accurately predict latitude and longitude. 
+
+
+
+```{r, results = FALSE, warning=FALSE, message = FALSE}
+set.seed(23) 
+cleaner_rats2 <- 
+  sample_1 %>% 
+  select(location_type, borough, street_name, incident_zip, longitude)
+
+rats_folds2 <- crossv_kfold(cleaner_rats2, k = 10)
+
+rats_folds2 <- rats_folds2 %>% mutate(model = map(train, ~ lm(longitude ~ ., data = .)))
+
+rats_folds2$model[[1]] %>% summary()
+
+```
+
+
+
+```{r, results = FALSE, warning=FALSE, message = FALSE}
+library(broom)
+
+prediction <- 
+  rats_folds2 %>%
+  mutate(predicted = map2(model, train, ~ augment(.x, newdata = .y))) %>% 
+  unnest(predicted)
+prediction
+```
+
+
+- Now we want to run our linear model onto the training data set provided above through the kfold technique and make a prediction that asks where would we expect another rat sighting to occur? Our prediction is bias and may not be as accurate as other methods due to putting factored variables into our model prediciton. 
+
+
+
+- We compare by looking to residual
+
+```{r, warning= FALSE, message =FALSE}
+prediction <- prediction %>% 
+  mutate(residual = .fitted - longitude)
+
+prediction%>%
+  ggplot(aes(longitude, residual)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    stat_smooth(method = "loess") +
+    theme_minimal()
+
+
+```
+
+
+
+By looking at the residual values given through our predicition it is clear that we see and can predict another rat sighting to occur around -74.0 - -73.9 degrees longitude. 
+
+
+```{r, warning= FALSE, message =FALSE}
+rs <- prediction %>%
+  group_by(.id) %>% 
+  summarise(
+    sst = sum((longitude - mean(longitude)) ^ 2), # Sum of Squares Total
+    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
+    r.squared = 1 - sse / sst         # Proportion of variance accounted for
+    )
+
+rs %>% 
+  ggplot(aes(r.squared, fill  = .id)) +
+    geom_histogram() +
+    geom_vline(aes(xintercept = mean(r.squared)))
+
+```
+
+
+Once again we want to see how accurate our model is so we run R^2 value and notice they are all around 0.9915 standard. A note about running this model is that we do not have an accurate adjusted R^2 value provided due to most likely overfitting of the data set. 
+
+
+
+
+5) Now we repeat the process on the Latitude data
+
+```{r, results = FALSE, warning = FALSE,message=FALSE}
+library(broom)
+
+prediction2 <- 
+  rats_folds %>%
+  mutate(predicted = map2(model4, train, ~ augment(.x, newdata = .y))) %>% 
+  unnest(predicted)
+prediction
+```
+
+
+```{r, warning = FALSE, message=FALSE}
+prediction2 <- prediction2 %>% 
+  mutate(residual = .fitted - latitude)
+
+prediction2%>%
+  ggplot(aes(latitude, residual)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    stat_smooth(method = "loess") +
+    theme_minimal()
+```
+
+
+- Looking at the residual we can predict that the rat might appear again around 40.7 degrees of latitude. 
+
+
+
+
+```{r, warning = FALSE,message=FALSE}
+rs2 <- prediction2 %>%
+  group_by(.id) %>% 
+  summarise(
+    sst = sum((latitude - mean(latitude)) ^ 2), # Sum of Squares Total
+    sse = sum(residual ^ 2),          # Sum of Squares Residual/Error
+    r.squared = 1 - sse / sst         # Proportion of variance accounted for
+    )
+
+rs2 %>% 
+  ggplot(aes(r.squared, fill  = .id)) +
+    geom_histogram() +
+    geom_vline(aes(xintercept = mean(r.squared)))
+
+
+
+```
+
+
+We notice that our R^2 value is higher with the latitude plot being around 0.9972 again needing to be adjusted based on overfitting. 
+
+
+
+
+Overall this data does make sense as it lands us in New York City (Manhattan) when we plot the Expected values onto a latitude and longitude map. 

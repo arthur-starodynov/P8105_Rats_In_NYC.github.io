@@ -108,7 +108,7 @@ prediction <-
 
 6) We created a residual plot to visually assess the performance of our model.
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, message = FALSE}
 prediction <- prediction %>% 
   mutate(residual = .fitted - rat_per_month)
 
