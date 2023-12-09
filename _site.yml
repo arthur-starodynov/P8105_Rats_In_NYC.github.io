@@ -16,10 +16,10 @@ navbar:
       menu: 
       - text: "Data Sources"
         href: data.html
+      - text: "Exploratory Analysis"
+        href: dataviz.html
       - text: "Interactive Data"
         href: heatmap.html
-      - text: "Exploratory Analysis"
-        href: dataviz.html      
       - text: "Regression"
         href: lm_prediction.html
       - text: "Predictive Regression Model"
